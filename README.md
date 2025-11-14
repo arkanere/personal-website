@@ -1,36 +1,111 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Personal Website
+
+A minimalist personal website built with Next.js 15, TypeScript, and TailwindCSS.
+
+## Features
+
+- 🎨 Minimalist, clean design
+- 🌗 Dark mode support
+- 📱 Fully responsive
+- ⚡ Built with Next.js App Router
+- 🎯 TypeScript for type safety
+- 💅 Styled with TailwindCSS
+- 🚀 Optimized for Vercel deployment
 
 ## Getting Started
 
-First, run the development server:
+### Development
 
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Run the development server:
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Customization
 
-## Learn More
+1. **Update your information:**
+   - Edit `components/Header.tsx` - Change "Your Name" to your actual name
+   - Edit `components/Hero.tsx` - Update the hero text and tagline
+   - Edit `components/About.tsx` - Add your bio and skills
+   - Edit `components/Contact.tsx` - Add your actual email and social links
+   - Edit `app/layout.tsx` - Update the metadata (title, description)
 
-To learn more about Next.js, take a look at the following resources:
+2. **Add your projects:**
+   - Edit `lib/projects.ts` - Replace sample projects with your actual projects
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Add your blog posts:**
+   - Edit `lib/blog.ts` - Add your blog posts
+   - Or integrate with a CMS like Contentful, Sanity, or markdown files
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. **Customize colors:**
+   - Edit `app/globals.css` - Modify the color scheme
+   - Update Tailwind classes in components for different styling
 
-## Deploy on Vercel
+## Deployment to Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push your code to GitHub:
+```bash
+git add .
+git commit -m "Initial commit"
+git remote add origin <your-repo-url>
+git push -u origin main
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. Deploy to Vercel:
+   - Go to [vercel.com](https://vercel.com)
+   - Click "New Project"
+   - Import your GitHub repository
+   - Vercel will auto-detect Next.js and configure everything
+   - Click "Deploy"
+
+3. Your site will be live at `your-project.vercel.app`
+
+4. Optional: Add a custom domain in Vercel project settings
+
+## Project Structure
+
+```
+├── app/
+│   ├── blog/
+│   │   ├── [slug]/
+│   │   │   └── page.tsx      # Individual blog post
+│   │   └── page.tsx           # Blog listing
+│   ├── projects/
+│   │   └── [slug]/
+│   │       └── page.tsx       # Individual project
+│   ├── globals.css            # Global styles
+│   ├── layout.tsx             # Root layout
+│   └── page.tsx               # Home page
+├── components/
+│   ├── About.tsx
+│   ├── Blog.tsx
+│   ├── Contact.tsx
+│   ├── Footer.tsx
+│   ├── Header.tsx
+│   ├── Hero.tsx
+│   ├── Projects.tsx
+│   └── ThemeProvider.tsx
+├── lib/
+│   ├── blog.ts                # Blog post data
+│   └── projects.ts            # Project data
+└── public/                    # Static assets
+```
+
+## Tech Stack
+
+- **Framework:** Next.js 15
+- **Language:** TypeScript
+- **Styling:** TailwindCSS
+- **Dark Mode:** next-themes
+- **Deployment:** Vercel
+
+## License
+
+MIT License - feel free to use this template for your own personal website!
