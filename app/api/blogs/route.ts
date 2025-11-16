@@ -58,13 +58,13 @@ export async function POST(request: NextRequest) {
         ${body.slug},
         ${body.content},
         ${body.excerpt || null},
-        ${body.featured_image ? JSON.stringify(body.featured_image) : null},
+        ${body.featured_image ? JSON.stringify(body.featured_image) : null}::jsonb,
         ${body.author_name},
         ${body.status || 'draft'},
-        ${body.tags || []},
-        ${body.categories || []},
-        ${JSON.stringify(body.seo_metadata)},
-        ${body.published_at || null}
+        ${JSON.stringify(body.tags || [])}::jsonb::text[],
+        ${JSON.stringify(body.categories || [])}::jsonb::text[],
+        ${JSON.stringify(body.seo_metadata)}::jsonb,
+        ${body.published_at ? new Date(body.published_at).toISOString() : null}
       )
       RETURNING id, title, slug, status
     `

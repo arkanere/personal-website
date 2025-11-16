@@ -66,13 +66,13 @@ export async function PATCH(
         slug = ${body.slug},
         content = ${body.content},
         excerpt = ${body.excerpt || null},
-        featured_image = ${body.featured_image ? JSON.stringify(body.featured_image) : null},
+        featured_image = ${body.featured_image ? JSON.stringify(body.featured_image) : null}::jsonb,
         author_name = ${body.author_name},
         status = ${body.status},
-        tags = ${body.tags || []},
-        categories = ${body.categories || []},
-        seo_metadata = ${JSON.stringify(body.seo_metadata)},
-        published_at = ${body.published_at || null}
+        tags = ${JSON.stringify(body.tags || [])}::jsonb::text[],
+        categories = ${JSON.stringify(body.categories || [])}::jsonb::text[],
+        seo_metadata = ${JSON.stringify(body.seo_metadata)}::jsonb,
+        published_at = ${body.published_at ? new Date(body.published_at).toISOString() : null}
       WHERE id = ${blogId}
       RETURNING id, title, slug, status, updated_at
     `
