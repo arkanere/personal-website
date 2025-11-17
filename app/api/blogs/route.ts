@@ -40,8 +40,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert new blog
+    // Convert arrays to PostgreSQL array format: '{value1,value2}'
     const tags = body.tags || []
     const categories = body.categories || []
+    const tagsArray = `{${tags.join(',')}}`
+    const categoriesArray = `{${categories.join(',')}}`
 
     const { rows } = await sql`
       INSERT INTO personal_website_blogs (
@@ -64,8 +67,8 @@ export async function POST(request: NextRequest) {
         ${body.featured_image ? JSON.stringify(body.featured_image) : null}::jsonb,
         ${body.author_name},
         ${body.status || 'draft'},
-        ${tags},
-        ${categories},
+        ${tagsArray}::text[],
+        ${categoriesArray}::text[],
         ${JSON.stringify(body.seo_metadata)}::jsonb,
         ${body.published_at ? new Date(body.published_at).toISOString() : null}
       )

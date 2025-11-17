@@ -60,8 +60,11 @@ export async function PATCH(
     }
 
     // Update blog
+    // Convert arrays to PostgreSQL array format: '{value1,value2}'
     const tags = body.tags || []
     const categories = body.categories || []
+    const tagsArray = `{${tags.join(',')}}`
+    const categoriesArray = `{${categories.join(',')}}`
 
     const { rows } = await sql`
       UPDATE personal_website_blogs SET
@@ -72,8 +75,8 @@ export async function PATCH(
         featured_image = ${body.featured_image ? JSON.stringify(body.featured_image) : null}::jsonb,
         author_name = ${body.author_name},
         status = ${body.status},
-        tags = ${tags},
-        categories = ${categories},
+        tags = ${tagsArray}::text[],
+        categories = ${categoriesArray}::text[],
         seo_metadata = ${JSON.stringify(body.seo_metadata)}::jsonb,
         published_at = ${body.published_at ? new Date(body.published_at).toISOString() : null}
       WHERE id = ${blogId}

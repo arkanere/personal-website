@@ -207,6 +207,10 @@ async function seedSampleData() {
     ]
 
     for (const blog of sampleBlogs) {
+      // Convert arrays to PostgreSQL array format: '{value1,value2}'
+      const tagsArray = `{${blog.tags.join(',')}}`
+      const categoriesArray = `{${blog.categories.join(',')}}`
+
       await sql`
         INSERT INTO personal_website_blogs (
           title, slug, content, excerpt, featured_image, author_name, status,
@@ -219,8 +223,8 @@ async function seedSampleData() {
           ${blog.featured_image ? JSON.stringify(blog.featured_image) : null}::jsonb,
           ${blog.author_name},
           ${blog.status},
-          ${blog.tags},
-          ${blog.categories},
+          ${tagsArray}::text[],
+          ${categoriesArray}::text[],
           ${JSON.stringify(blog.seo_metadata)}::jsonb,
           ${blog.published_at ? blog.published_at.toISOString() : null}
         );
