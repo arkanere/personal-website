@@ -40,6 +40,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert new blog
+    const tags = body.tags || []
+    const categories = body.categories || []
+
     const { rows } = await sql`
       INSERT INTO personal_website_blogs (
         title,
@@ -61,8 +64,8 @@ export async function POST(request: NextRequest) {
         ${body.featured_image ? JSON.stringify(body.featured_image) : null}::jsonb,
         ${body.author_name},
         ${body.status || 'draft'},
-        ${JSON.stringify(body.tags || [])}::jsonb::text[],
-        ${JSON.stringify(body.categories || [])}::jsonb::text[],
+        ${tags},
+        ${categories},
         ${JSON.stringify(body.seo_metadata)}::jsonb,
         ${body.published_at ? new Date(body.published_at).toISOString() : null}
       )

@@ -219,8 +219,8 @@ async function seedSampleData() {
           ${blog.featured_image ? JSON.stringify(blog.featured_image) : null}::jsonb,
           ${blog.author_name},
           ${blog.status},
-          ${JSON.stringify(blog.tags)}::jsonb::text[],
-          ${JSON.stringify(blog.categories)}::jsonb::text[],
+          ${blog.tags},
+          ${blog.categories},
           ${JSON.stringify(blog.seo_metadata)}::jsonb,
           ${blog.published_at ? blog.published_at.toISOString() : null}
         );

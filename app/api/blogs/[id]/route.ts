@@ -60,6 +60,9 @@ export async function PATCH(
     }
 
     // Update blog
+    const tags = body.tags || []
+    const categories = body.categories || []
+
     const { rows } = await sql`
       UPDATE personal_website_blogs SET
         title = ${body.title},
@@ -69,8 +72,8 @@ export async function PATCH(
         featured_image = ${body.featured_image ? JSON.stringify(body.featured_image) : null}::jsonb,
         author_name = ${body.author_name},
         status = ${body.status},
-        tags = ${JSON.stringify(body.tags || [])}::jsonb::text[],
-        categories = ${JSON.stringify(body.categories || [])}::jsonb::text[],
+        tags = ${tags},
+        categories = ${categories},
         seo_metadata = ${JSON.stringify(body.seo_metadata)}::jsonb,
         published_at = ${body.published_at ? new Date(body.published_at).toISOString() : null}
       WHERE id = ${blogId}
