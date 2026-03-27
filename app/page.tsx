@@ -1,5 +1,4 @@
 import { Header } from '@/components/Header'
-import { Footer } from '@/components/Footer'
 import Link from 'next/link'
 import { sql } from '@vercel/postgres'
 import { BlogListItem } from '@/lib/types/blog'
@@ -25,27 +24,26 @@ export default async function Home() {
   const posts = await getPublishedBlogs()
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <>
       <Header />
-      <main className="max-w-2xl mx-auto px-6 pb-20 flex-1">
+      <main className="max-w-2xl mx-auto px-6 pb-20">
         {posts.length === 0 ? (
-          <p className="text-muted">No essays yet.</p>
+          <p className="text-gray-500">No essays yet.</p>
         ) : (
-          <ul className="space-y-3 list-none p-0">
+          <div className="space-y-3">
             {posts.map((post) => (
-              <li key={post.id}>
+              <div key={post.id}>
                 <Link
                   href={`/blog/${post.slug}`}
-                  className="no-underline hover:underline [color:inherit]"
+                  className="hover:underline"
                 >
                   {post.title}
                 </Link>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </main>
-      <Footer />
-    </div>
+    </>
   )
 }

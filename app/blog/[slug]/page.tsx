@@ -1,5 +1,4 @@
 import { Header } from '@/components/Header'
-import { Footer } from '@/components/Footer'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { sql } from '@vercel/postgres'
@@ -99,12 +98,12 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <>
       <Header />
-      <main className="max-w-2xl mx-auto px-6 pb-20 flex-1">
+      <main className="max-w-2xl mx-auto px-6 pb-20">
         <Link
           href="/"
-          className="text-sm text-muted no-underline hover:underline mb-10 inline-block"
+          className="text-sm text-gray-500 hover:underline mb-10 inline-block"
         >
           ← Back
         </Link>
@@ -114,7 +113,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
             <h1 className="text-3xl font-bold mb-3">
               {post.title}
             </h1>
-            <div className="text-sm text-muted">
+            <div className="text-sm text-gray-500">
               {post.published_at ? formatDate(post.published_at) : 'Draft'}
             </div>
           </header>
@@ -125,7 +124,6 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
           />
         </article>
       </main>
-      <Footer />
-    </div>
+    </>
   )
 }
