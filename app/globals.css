@@ -4,21 +4,25 @@
 
 :root {
   --color-bg: #ffffff;
-  --color-text: #333333;
+  --color-text: #1a1a1a;
+  --color-text-muted: #6b7280;
+  --color-heading: #111111;
   --color-link: #1a4dbe;
 }
 
 .dark {
   --color-bg: #1a1a1a;
-  --color-text: #d1d5db;
+  --color-text: #d4d4d4;
+  --color-text-muted: #9ca3af;
+  --color-heading: #f0f0f0;
   --color-link: #8cb4ff;
 }
 
 body {
   font-family: Georgia, 'Times New Roman', Times, serif;
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 1.7;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.75;
   background-color: var(--color-bg);
   color: var(--color-text);
 }
@@ -29,4 +33,22 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+.prose {
+  font-size: inherit;
+  line-height: inherit;
+  --tw-prose-body: var(--color-text);
+  --tw-prose-headings: var(--color-heading);
+  --tw-prose-links: var(--color-link);
+  --tw-prose-bold: var(--color-text);
+  --tw-prose-counters: var(--color-text-muted);
+  --tw-prose-bullets: var(--color-text-muted);
+  --tw-prose-quotes: var(--color-text);
+  --tw-prose-code: var(--color-text);
+  --tw-prose-hr: var(--color-text-muted);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
 }

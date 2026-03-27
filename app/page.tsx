@@ -25,30 +25,27 @@ export default async function Home() {
   const posts = await getPublishedBlogs()
 
   return (
-    <>
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="max-w-2xl mx-auto px-6 pb-20 flex-1 w-full">
-          {posts.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400">No essays yet.</p>
-          ) : (
-            <ul className="space-y-3 list-none p-0">
-              {posts.map((post) => (
-                <li key={post.id}>
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="no-underline hover:underline"
-                    style={{ color: 'inherit' }}
-                  >
-                    {post.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </main>
-        <Footer />
-      </div>
-    </>
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="max-w-2xl mx-auto px-6 pb-20 flex-1">
+        {posts.length === 0 ? (
+          <p className="text-muted">No essays yet.</p>
+        ) : (
+          <ul className="space-y-3 list-none p-0">
+            {posts.map((post) => (
+              <li key={post.id}>
+                <Link
+                  href={`/blog/${post.slug}`}
+                  className="no-underline hover:underline [color:inherit]"
+                >
+                  {post.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
+      <Footer />
+    </div>
   )
 }

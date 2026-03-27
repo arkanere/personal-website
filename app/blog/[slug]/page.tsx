@@ -101,27 +101,26 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="max-w-2xl mx-auto px-6 pb-20 flex-1 w-full">
+      <main className="max-w-2xl mx-auto px-6 pb-20 flex-1">
         <Link
           href="/"
-          className="text-sm no-underline hover:underline mb-10 inline-block opacity-50 hover:opacity-100 transition-opacity"
-          style={{ color: 'inherit' }}
+          className="text-sm text-muted no-underline hover:underline mb-10 inline-block"
         >
           ← Back
         </Link>
 
         <article>
           <header className="mb-10">
-            <h1 className="text-3xl font-bold mb-3 text-gray-900 dark:text-gray-100">
+            <h1 className="text-3xl font-bold mb-3">
               {post.title}
             </h1>
-            <div className="text-sm opacity-50">
+            <div className="text-sm text-muted">
               {post.published_at ? formatDate(post.published_at) : 'Draft'}
             </div>
           </header>
 
           <div
-            className="prose prose-gray dark:prose-invert max-w-none prose-headings:font-bold"
+            className="prose max-w-none"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
         </article>
