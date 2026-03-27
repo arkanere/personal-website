@@ -6,7 +6,7 @@ import { sql } from '@vercel/postgres'
 import { Blog } from '@/lib/types/blog'
 import type { Metadata } from 'next'
 
-export const revalidate = 60 // Revalidate every 60 seconds
+export const revalidate = 60
 
 async function getBlogBySlug(slug: string): Promise<Blog | null> {
   try {
@@ -66,7 +66,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   return {
-    title: post.seo_metadata.metaTitle || `${post.title} - Your Name`,
+    title: post.seo_metadata.metaTitle || `${post.title} - Aniruddha Kanere`,
     description: post.seo_metadata.metaDescription || post.excerpt || undefined,
     keywords: post.seo_metadata.keywords || undefined,
     openGraph: {
@@ -87,7 +87,6 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
     notFound()
   }
 
-  // Increment view count (fire and forget)
   incrementViewCount(slug)
 
   const formatDate = (dateString: string | Date) => {
@@ -100,54 +99,34 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
   }
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="min-h-screen pt-32 pb-20 px-6">
-        <article className="max-w-3xl mx-auto">
-          <Link
-            href="/blog"
-            className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors mb-8"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
-            Back to blog
-          </Link>
+      <main className="max-w-2xl mx-auto px-6 pb-20 flex-1 w-full">
+        <Link
+          href="/"
+          className="text-sm no-underline hover:underline mb-10 inline-block opacity-50 hover:opacity-100 transition-opacity"
+          style={{ color: 'inherit' }}
+        >
+          ← Back
+        </Link>
 
-          <header className="mb-8">
-            <time className="text-sm text-gray-500 dark:text-gray-500">
-              {post.published_at ? formatDate(post.published_at) : 'Draft'}
-            </time>
-            <h1 className="text-4xl md:text-5xl font-bold mt-2 mb-4">
+        <article>
+          <header className="mb-10">
+            <h1 className="text-3xl font-bold mb-3 text-gray-900 dark:text-gray-100">
               {post.title}
             </h1>
-            {post.excerpt && (
-              <p className="text-xl text-gray-600 dark:text-gray-400">
-                {post.excerpt}
-              </p>
-            )}
-            <div className="mt-4 text-sm text-gray-500 dark:text-gray-500">
-              By {post.author_name}
+            <div className="text-sm opacity-50">
+              {post.published_at ? formatDate(post.published_at) : 'Draft'}
             </div>
           </header>
 
           <div
-            className="prose prose-gray dark:prose-invert max-w-none"
+            className="prose prose-gray dark:prose-invert max-w-none prose-headings:font-bold"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
         </article>
       </main>
       <Footer />
-    </>
+    </div>
   )
 }
