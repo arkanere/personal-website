@@ -97,64 +97,54 @@ export default function AdminBlogsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="stack">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Blog Management</h1>
-        <Link
-          href="/admin/blogs/create"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        >
+      <div className="flex-between">
+        <h1 className="admin-page-title">Blog Management</h1>
+        <Link href="/admin/blogs/create" className="btn btn-primary">
           Create New Blog
         </Link>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Total Blogs</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
+      <div className="grid-4">
+        <div className="card">
+          <p className="stat-label">Total Blogs</p>
+          <p className="stat-value">{stats.total}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Published</p>
-          <p className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.published}</p>
+        <div className="card">
+          <p className="stat-label">Published</p>
+          <p className="stat-value stat-green">{stats.published}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Drafts</p>
-          <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{stats.draft}</p>
+        <div className="card">
+          <p className="stat-label">Drafts</p>
+          <p className="stat-value stat-yellow">{stats.draft}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Archived</p>
-          <p className="text-3xl font-bold text-gray-600 dark:text-gray-400">{stats.archived}</p>
+        <div className="card">
+          <p className="stat-label">Archived</p>
+          <p className="stat-value stat-muted">{stats.archived}</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Search */}
+      <div className="card-sm">
+        <div className="grid-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Search
-            </label>
+            <label className="form-label">Search</label>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by title or excerpt..."
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              className="form-input"
             />
           </div>
-
-          {/* Status Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Status
-            </label>
+            <label className="form-label">Status</label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as BlogStatus | 'all')}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              className="form-input"
             >
               <option value="all">All</option>
               <option value="draft">Draft</option>
@@ -162,16 +152,12 @@ export default function AdminBlogsPage() {
               <option value="archived">Archived</option>
             </select>
           </div>
-
-          {/* Sort */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Sort By
-            </label>
+            <label className="form-label">Sort By</label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              className="form-input"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
@@ -182,91 +168,64 @@ export default function AdminBlogsPage() {
       </div>
 
       {/* Blog List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="table-card">
         {loading ? (
-          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-            Loading blogs...
-          </div>
+          <div className="empty-state">Loading blogs...</div>
         ) : filteredBlogs.length === 0 ? (
-          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+          <div className="empty-state">
             {searchQuery || statusFilter !== 'all'
               ? 'No blogs match your filters'
               : 'No blogs yet. Create your first blog!'}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-900">
+          <div className="table-wrapper">
+            <table className="table">
+              <thead>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Title
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Author
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Published
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Views
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th>Title</th>
+                  <th>Status</th>
+                  <th>Author</th>
+                  <th>Published</th>
+                  <th>Views</th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody>
                 {filteredBlogs.map((blog) => (
-                  <tr key={blog.id} className="hover:bg-gray-50 dark:hover:bg-gray-750">
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {blog.title}
-                      </div>
+                  <tr key={blog.id}>
+                    <td>
+                      <div className="table-title">{blog.title}</div>
                       {blog.excerpt && (
-                        <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-md">
-                          {blog.excerpt}
-                        </div>
+                        <div className="table-excerpt">{blog.excerpt}</div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="table-muted">
                       <StatusBadge status={blog.status} />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {blog.author_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <td className="table-muted">{blog.author_name}</td>
+                    <td className="table-muted">
                       {blog.published_at
                         ? new Date(blog.published_at).toLocaleDateString()
                         : '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {blog.view_count}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                      <Link
-                        href={`/admin/blogs/${blog.id}/edit`}
-                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                      >
-                        Edit
-                      </Link>
-                      {blog.status === 'published' && (
-                        <Link
-                          href={`/blog/${blog.slug}`}
-                          target="_blank"
-                          className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
-                        >
-                          View
+                    <td className="table-muted">{blog.view_count}</td>
+                    <td>
+                      <div className="table-actions">
+                        <Link href={`/admin/blogs/${blog.id}/edit`} className="link-blue">
+                          Edit
                         </Link>
-                      )}
-                      <button
-                        onClick={() => handleDelete(blog.id, blog.title)}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                      >
-                        Delete
-                      </button>
+                        {blog.status === 'published' && (
+                          <Link href={`/blog/${blog.slug}`} target="_blank" className="link-green">
+                            View
+                          </Link>
+                        )}
+                        <button
+                          onClick={() => handleDelete(blog.id, blog.title)}
+                          className="link-red"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

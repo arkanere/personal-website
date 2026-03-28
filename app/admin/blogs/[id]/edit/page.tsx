@@ -158,127 +158,115 @@ export default function EditBlogPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-gray-500 dark:text-gray-400">Loading blog...</p>
+      <div className="loading-center">
+        <p>Loading blog...</p>
       </div>
     )
   }
 
   if (!blog) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-gray-500 dark:text-gray-400">Blog not found</p>
+      <div className="loading-center">
+        <p>Blog not found</p>
       </div>
     )
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Edit Blog</h1>
+    <div className="admin-content-wide">
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h1 className="admin-page-title">Edit Blog</h1>
 
         {/* Info Banner */}
-        <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4">
-          <div className="flex items-start space-x-3">
-            <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div className="info-banner">
+          <div className="info-grid">
+            <div>
+              <span className="info-label">Status:</span>
+              <div className="info-value">
+                <StatusBadge status={blog.status} />
+              </div>
+            </div>
+            {blog.published_at && (
               <div>
-                <span className="text-gray-600 dark:text-gray-400">Status:</span>
-                <div className="mt-1">
-                  <StatusBadge status={blog.status} />
+                <span className="info-label">Published:</span>
+                <div className="info-value">
+                  {new Date(blog.published_at).toLocaleDateString()}
                 </div>
               </div>
-              {blog.published_at && (
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">Published:</span>
-                  <div className="mt-1 text-gray-900 dark:text-white">
-                    {new Date(blog.published_at).toLocaleDateString()}
-                  </div>
-                </div>
-              )}
-              <div>
-                <span className="text-gray-600 dark:text-gray-400">Last Updated:</span>
-                <div className="mt-1 text-gray-900 dark:text-white">
-                  {new Date(blog.updated_at).toLocaleDateString()}
-                </div>
+            )}
+            <div>
+              <span className="info-label">Last Updated:</span>
+              <div className="info-value">
+                {new Date(blog.updated_at).toLocaleDateString()}
               </div>
-              <div>
-                <span className="text-gray-600 dark:text-gray-400">Views:</span>
-                <div className="mt-1 text-gray-900 dark:text-white">
-                  {blog.view_count}
-                </div>
-              </div>
+            </div>
+            <div>
+              <span className="info-label">Views:</span>
+              <div className="info-value">{blog.view_count}</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid-sidebar">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="stack">
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Title <span className="text-red-500">*</span>
+            <label className="form-label">
+              Title <span className="form-required">*</span>
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+              className="form-input"
               placeholder="Enter blog title..."
               maxLength={255}
             />
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {title.length}/255 characters
-            </p>
+            <p className="form-hint">{title.length}/255 characters</p>
           </div>
 
           {/* Slug */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Slug <span className="text-red-500">*</span>
+            <label className="form-label">
+              Slug <span className="form-required">*</span>
             </label>
             <SlugInput title={title} value={slug} onChange={setSlug} excludeId={blogId} />
           </div>
 
           {/* Excerpt */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Excerpt (Optional)
-            </label>
+            <label className="form-label">Excerpt (Optional)</label>
             <textarea
               value={excerpt}
               onChange={(e) => setExcerpt(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+              className="form-input"
               rows={3}
               placeholder="Brief description of the blog post..."
               maxLength={500}
             />
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {excerpt.length}/500 characters
-            </p>
+            <p className="form-hint">{excerpt.length}/500 characters</p>
           </div>
 
           {/* Content */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Content <span className="text-red-500">*</span>
+            <label className="form-label">
+              Content <span className="form-required">*</span>
             </label>
             <TipTapEditor content={content} onChange={setContent} />
           </div>
 
           {/* SEO Settings */}
-          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+          <div className="seo-section">
             <button
               type="button"
               onClick={() => setSeoExpanded(!seoExpanded)}
-              className="flex items-center justify-between w-full text-left"
+              className="seo-toggle"
             >
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                SEO Settings
-              </span>
+              <span className="seo-toggle-label">SEO Settings</span>
               <svg
-                className={`w-5 h-5 transform transition-transform ${seoExpanded ? 'rotate-180' : ''}`}
+                className={`seo-chevron${seoExpanded ? ' expanded' : ''}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -288,40 +276,34 @@ export default function EditBlogPage() {
             </button>
 
             {seoExpanded && (
-              <div className="mt-4 space-y-4">
+              <div className="seo-fields">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Meta Title
-                  </label>
+                  <label className="seo-label">Meta Title</label>
                   <input
                     type="text"
                     value={seoTitle}
                     onChange={(e) => setSeoTitle(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                    className="form-input"
                     placeholder="Defaults to blog title"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Meta Description
-                  </label>
+                  <label className="seo-label">Meta Description</label>
                   <textarea
                     value={seoDescription}
                     onChange={(e) => setSeoDescription(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                    className="form-input"
                     rows={2}
                     placeholder="Brief description for search engines..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Keywords
-                  </label>
+                  <label className="seo-label">Keywords</label>
                   <input
                     type="text"
                     value={seoKeywords}
                     onChange={(e) => setSeoKeywords(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                    className="form-input"
                     placeholder="keyword1, keyword2, keyword3"
                   />
                 </div>
@@ -331,17 +313,15 @@ export default function EditBlogPage() {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="stack">
           {/* Publish Box */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4">
+          <div className="card-sm stack-sm">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Status
-              </label>
+              <label className="form-label">Status</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as BlogStatus)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                className="form-input"
               >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
@@ -350,23 +330,23 @@ export default function EditBlogPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Author Name <span className="text-red-500">*</span>
+              <label className="form-label">
+                Author Name <span className="form-required">*</span>
               </label>
               <input
                 type="text"
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                className="form-input"
                 placeholder="Author name"
               />
             </div>
 
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
+            <div className="separator stack-xs">
               <button
                 onClick={handleSubmit}
                 disabled={saving}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn btn-primary btn-full"
               >
                 {saving ? 'Saving...' : 'Update Blog'}
               </button>
@@ -374,14 +354,14 @@ export default function EditBlogPage() {
                 <Link
                   href={`/blog/${blog.slug}`}
                   target="_blank"
-                  className="block w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-center"
+                  className="btn btn-success btn-full"
                 >
                   View on Site
                 </Link>
               )}
               <button
                 onClick={handleDelete}
-                className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                className="btn btn-danger btn-full"
               >
                 Delete Blog
               </button>
@@ -389,37 +369,29 @@ export default function EditBlogPage() {
           </div>
 
           {/* Categories & Tags */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4">
+          <div className="card-sm stack-sm">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Categories
-              </label>
+              <label className="form-label">Categories</label>
               <input
                 type="text"
                 value={categories}
                 onChange={(e) => setCategories(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                className="form-input"
                 placeholder="Technology, Web Dev"
               />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Separate with commas
-              </p>
+              <p className="form-hint-xs">Separate with commas</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tags
-              </label>
+              <label className="form-label">Tags</label>
               <input
                 type="text"
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                className="form-input"
                 placeholder="nextjs, react, typescript"
               />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Separate with commas
-              </p>
+              <p className="form-hint-xs">Separate with commas</p>
             </div>
           </div>
         </div>

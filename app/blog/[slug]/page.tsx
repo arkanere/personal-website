@@ -100,26 +100,23 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
   return (
     <>
       <Header />
-      <main className="max-w-2xl mx-auto px-6 pb-20">
-        <Link
-          href="/"
-          className="text-sm text-gray-500 hover:underline mb-10 inline-block"
-        >
+      <main className="container main">
+        <Link href="/" className="back-link">
           ← Back
         </Link>
 
         <article>
-          <header className="mb-10">
-            <h1 className="text-3xl font-bold mb-3">
+          <header className="post-header">
+            <h1 className="post-title">
               {post.title}
             </h1>
-            <div className="text-sm text-gray-500">
+            <div className="post-meta">
               {post.published_at ? formatDate(post.published_at) : 'Draft'}
             </div>
           </header>
 
           <div
-            className="prose max-w-none"
+            className="prose"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
         </article>

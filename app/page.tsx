@@ -26,17 +26,14 @@ export default async function Home() {
   return (
     <>
       <Header />
-      <main className="max-w-2xl mx-auto px-6 pb-20">
+      <main className="container main">
         {posts.length === 0 ? (
-          <p className="text-gray-500">No essays yet.</p>
+          <p className="muted">No essays yet.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="post-list">
             {posts.map((post) => (
               <div key={post.id}>
-                <Link
-                  href={`/blog/${post.slug}`}
-                  className="hover:underline"
-                >
+                <Link href={`/blog/${post.slug}`}>
                   {post.title}
                 </Link>
               </div>
