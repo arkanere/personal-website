@@ -1,19 +1,45 @@
 import { Header } from '@/components/Header'
 import Link from 'next/link'
 import { sql } from '@vercel/postgres'
-import { BlogListItem } from '@/lib/types/blog'
 
 export const revalidate = 60
 
-async function getPublishedBlogs(): Promise<BlogListItem[]> {
+interface HomeListItem {
+  id: number
+  title: string
+  slug: string
+  excerpt: string | null
+  published_at: Date | null
+  series_title: string | null
+  post_count: number
+}
+
+/**
+ * The home page lists standalone articles alongside one article per series:
+ * the index article the series designates. The rest of a series' articles are
+ * reachable from that index rather than listed here.
+ */
+async function getHomePosts(): Promise<HomeListItem[]> {
   try {
     const { rows } = await sql`
-      SELECT id, title, slug, excerpt, published_at
-      FROM personal_website_blogs
-      WHERE status = 'published'
-      ORDER BY published_at DESC
+      SELECT
+        b.id, b.title, b.slug, b.excerpt, b.published_at,
+        s.title AS series_title,
+        COALESCE(
+          (
+            SELECT COUNT(*)
+            FROM personal_website_blogs m
+            WHERE m.series_id = s.id AND m.status = 'published'
+          ),
+          0
+        ) AS post_count
+      FROM personal_website_blogs b
+      LEFT JOIN personal_website_series s ON b.series_id = s.id
+      WHERE b.status = 'published'
+        AND (b.series_id IS NULL OR s.index_blog_id = b.id)
+      ORDER BY b.published_at DESC
     `
-    return rows as BlogListItem[]
+    return rows as HomeListItem[]
   } catch (error) {
     console.error('Error fetching blogs:', error)
     return []
@@ -21,7 +47,7 @@ async function getPublishedBlogs(): Promise<BlogListItem[]> {
 }
 
 export default async function Home() {
-  const posts = await getPublishedBlogs()
+  const posts = await getHomePosts()
 
   return (
     <>
@@ -36,6 +62,11 @@ export default async function Home() {
                 <Link href={`/blog/${post.slug}`}>
                   {post.title}
                 </Link>
+                {post.series_title && (
+                  <span className="series-tag">
+                    series · {post.post_count} {post.post_count === 1 ? 'part' : 'parts'}
+                  </span>
+                )}
               </div>
             ))}
           </div>

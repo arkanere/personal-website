@@ -2,13 +2,23 @@
 
 /**
  * Admin Blog List Page
- * Displays all blogs with search, filter, and management capabilities
+ * Displays all blogs with search, filter, and management capabilities.
+ * Articles are either independent or part of a series; series members are
+ * grouped under their series, with the index article marked.
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { BlogListItem, BlogStatus } from '@/lib/types/blog'
 import StatusBadge from '@/components/StatusBadge'
+import SeriesManager from '@/components/SeriesManager'
+
+/** A series' articles, or the bucket of independent articles when id is null. */
+interface BlogGroup {
+  id: number | null
+  title: string
+  blogs: BlogListItem[]
+}
 
 export default function AdminBlogsPage() {
   const [blogs, setBlogs] = useState<BlogListItem[]>([])
@@ -16,14 +26,11 @@ export default function AdminBlogsPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<BlogStatus | 'all'>('all')
+  const [seriesFilter, setSeriesFilter] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'most-viewed'>('newest')
+  const [groupBySeries, setGroupBySeries] = useState(true)
 
-  // Fetch blogs
-  useEffect(() => {
-    fetchBlogs()
-  }, [])
-
-  const fetchBlogs = async () => {
+  const fetchBlogs = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch('/api/admin/blogs')
@@ -36,7 +43,12 @@ export default function AdminBlogsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  // Fetch blogs
+  useEffect(() => {
+    fetchBlogs()
+  }, [fetchBlogs])
 
   // Filter and sort blogs
   useEffect(() => {
@@ -56,6 +68,13 @@ export default function AdminBlogsPage() {
       result = result.filter(blog => blog.status === statusFilter)
     }
 
+    // Filter by series membership
+    if (seriesFilter === 'none') {
+      result = result.filter(blog => blog.series_id === null)
+    } else if (seriesFilter !== 'all') {
+      result = result.filter(blog => blog.series_id === parseInt(seriesFilter))
+    }
+
     // Sort
     result.sort((a, b) => {
       if (sortBy === 'newest') {
@@ -68,7 +87,7 @@ export default function AdminBlogsPage() {
     })
 
     setFilteredBlogs(result)
-  }, [blogs, searchQuery, statusFilter, sortBy])
+  }, [blogs, searchQuery, statusFilter, seriesFilter, sortBy])
 
   const handleDelete = async (id: number, title: string) => {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) {
@@ -88,6 +107,68 @@ export default function AdminBlogsPage() {
     }
   }
 
+  // The series present in the current data, for the filter dropdown
+  const knownSeries = Array.from(
+    new Map(
+      blogs
+        .filter(blog => blog.series_id !== null)
+        .map(blog => [blog.series_id as number, blog.series_title as string])
+    ).entries()
+  ).sort((a, b) => a[1].localeCompare(b[1]))
+
+  /**
+   * Series members read as a hierarchy: one group per series in reading order,
+   * then the independent articles. Grouping is only meaningful when a series
+   * is actually involved, so a flat list is offered too.
+   */
+  const buildGroups = (): BlogGroup[] => {
+    const seriesGroups = new Map<number, BlogGroup>()
+    const independent: BlogListItem[] = []
+
+    for (const blog of filteredBlogs) {
+      if (blog.series_id === null) {
+        independent.push(blog)
+        continue
+      }
+
+      if (!seriesGroups.has(blog.series_id)) {
+        seriesGroups.set(blog.series_id, {
+          id: blog.series_id,
+          title: blog.series_title || 'Untitled series',
+          blogs: [],
+        })
+      }
+      seriesGroups.get(blog.series_id)!.blogs.push(blog)
+    }
+
+    // Within a series, reading order wins over the global sort.
+    // Unordered articles sort last, then by title.
+    for (const group of seriesGroups.values()) {
+      group.blogs.sort((a, b) => {
+        if (a.series_order === null && b.series_order === null) {
+          return a.title.localeCompare(b.title)
+        }
+        if (a.series_order === null) return 1
+        if (b.series_order === null) return -1
+        return a.series_order - b.series_order
+      })
+    }
+
+    const groups = Array.from(seriesGroups.values()).sort((a, b) =>
+      a.title.localeCompare(b.title)
+    )
+
+    if (independent.length > 0) {
+      groups.push({ id: null, title: 'Independent Articles', blogs: independent })
+    }
+
+    return groups
+  }
+
+  const groups = groupBySeries
+    ? buildGroups()
+    : [{ id: null, title: '', blogs: filteredBlogs }]
+
   // Statistics
   const stats = {
     total: blogs.length,
@@ -95,6 +176,56 @@ export default function AdminBlogsPage() {
     published: blogs.filter(b => b.status === 'published').length,
     archived: blogs.filter(b => b.status === 'archived').length,
   }
+
+  const renderRow = (blog: BlogListItem) => (
+    <tr key={blog.id}>
+      <td>
+        <div className="table-title">
+          {blog.series_order !== null && (
+            <span className="series-order">{blog.series_order}.</span>
+          )}
+          {blog.title}
+          {blog.is_series_index && (
+            <span className="badge badge-index">Index</span>
+          )}
+        </div>
+        {blog.excerpt && (
+          <div className="table-excerpt">{blog.excerpt}</div>
+        )}
+      </td>
+      <td className="table-muted">
+        {blog.series_title || <span className="table-muted">Independent</span>}
+      </td>
+      <td className="table-muted">
+        <StatusBadge status={blog.status} />
+      </td>
+      <td className="table-muted">{blog.author_name}</td>
+      <td className="table-muted">
+        {blog.published_at
+          ? new Date(blog.published_at).toLocaleDateString()
+          : '-'}
+      </td>
+      <td className="table-muted">{blog.view_count}</td>
+      <td>
+        <div className="table-actions">
+          <Link href={`/admin/blogs/${blog.id}/edit`} className="link-blue">
+            Edit
+          </Link>
+          {blog.status === 'published' && (
+            <Link href={`/blog/${blog.slug}`} target="_blank" className="link-green">
+              View
+            </Link>
+          )}
+          <button
+            onClick={() => handleDelete(blog.id, blog.title)}
+            className="link-red"
+          >
+            Delete
+          </button>
+        </div>
+      </td>
+    </tr>
+  )
 
   return (
     <div className="stack">
@@ -126,9 +257,12 @@ export default function AdminBlogsPage() {
         </div>
       </div>
 
+      {/* Series Management */}
+      <SeriesManager onSeriesChanged={fetchBlogs} />
+
       {/* Filters */}
-      <div className="card-sm">
-        <div className="grid-3">
+      <div className="card-sm stack-sm">
+        <div className="grid-4">
           <div>
             <label className="form-label">Search</label>
             <input
@@ -153,10 +287,24 @@ export default function AdminBlogsPage() {
             </select>
           </div>
           <div>
+            <label className="form-label">Series</label>
+            <select
+              value={seriesFilter}
+              onChange={(e) => setSeriesFilter(e.target.value)}
+              className="form-input"
+            >
+              <option value="all">All</option>
+              <option value="none">Independent only</option>
+              {knownSeries.map(([id, title]) => (
+                <option key={id} value={id}>{title}</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="form-label">Sort By</label>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'most-viewed')}
               className="form-input"
             >
               <option value="newest">Newest First</option>
@@ -165,6 +313,15 @@ export default function AdminBlogsPage() {
             </select>
           </div>
         </div>
+
+        <label className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={groupBySeries}
+            onChange={(e) => setGroupBySeries(e.target.checked)}
+          />
+          <span>Group by series</span>
+        </label>
       </div>
 
       {/* Blog List */}
@@ -173,7 +330,7 @@ export default function AdminBlogsPage() {
           <div className="empty-state">Loading blogs...</div>
         ) : filteredBlogs.length === 0 ? (
           <div className="empty-state">
-            {searchQuery || statusFilter !== 'all'
+            {searchQuery || statusFilter !== 'all' || seriesFilter !== 'all'
               ? 'No blogs match your filters'
               : 'No blogs yet. Create your first blog!'}
           </div>
@@ -183,6 +340,7 @@ export default function AdminBlogsPage() {
               <thead>
                 <tr>
                   <th>Title</th>
+                  <th>Series</th>
                   <th>Status</th>
                   <th>Author</th>
                   <th>Published</th>
@@ -190,46 +348,21 @@ export default function AdminBlogsPage() {
                   <th className="text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {filteredBlogs.map((blog) => (
-                  <tr key={blog.id}>
-                    <td>
-                      <div className="table-title">{blog.title}</div>
-                      {blog.excerpt && (
-                        <div className="table-excerpt">{blog.excerpt}</div>
-                      )}
-                    </td>
-                    <td className="table-muted">
-                      <StatusBadge status={blog.status} />
-                    </td>
-                    <td className="table-muted">{blog.author_name}</td>
-                    <td className="table-muted">
-                      {blog.published_at
-                        ? new Date(blog.published_at).toLocaleDateString()
-                        : '-'}
-                    </td>
-                    <td className="table-muted">{blog.view_count}</td>
-                    <td>
-                      <div className="table-actions">
-                        <Link href={`/admin/blogs/${blog.id}/edit`} className="link-blue">
-                          Edit
-                        </Link>
-                        {blog.status === 'published' && (
-                          <Link href={`/blog/${blog.slug}`} target="_blank" className="link-green">
-                            View
-                          </Link>
-                        )}
-                        <button
-                          onClick={() => handleDelete(blog.id, blog.title)}
-                          className="link-red"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+              {groups.map((group) => (
+                <tbody key={group.id ?? 'independent'}>
+                  {groupBySeries && (
+                    <tr className="group-row">
+                      <td colSpan={7}>
+                        {group.title}
+                        <span className="group-count">
+                          {group.blogs.length} {group.blogs.length === 1 ? 'article' : 'articles'}
+                        </span>
+                      </td>
+                    </tr>
+                  )}
+                  {group.blogs.map(renderRow)}
+                </tbody>
+              ))}
             </table>
           </div>
         )}

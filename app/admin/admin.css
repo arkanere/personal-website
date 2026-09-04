@@ -616,3 +616,60 @@
     padding: 2rem 2rem;
   }
 }
+
+/* Series */
+.badge-index {
+  background-color: #dbeafe;
+  color: #1e40af;
+  margin-left: 0.5rem;
+}
+
+.series-order {
+  color: #6b7280;
+  font-weight: 400;
+  margin-right: 0.375rem;
+}
+
+.group-row td {
+  background-color: #f9fafb;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 1.5rem;
+}
+
+.group-count {
+  margin-left: 0.5rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: #6b7280;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.checkbox-row input {
+  margin: 0;
+}
+
+.series-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  color: #374151;
+}

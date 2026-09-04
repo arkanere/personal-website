@@ -18,10 +18,15 @@ export async function GET() {
 
     const { rows } = await sql`
       SELECT
-        id, title, slug, excerpt, author_name, status,
-        published_at, created_at, updated_at, view_count
-      FROM personal_website_blogs
-      ORDER BY created_at DESC
+        b.id, b.title, b.slug, b.excerpt, b.author_name, b.status,
+        b.published_at, b.created_at, b.updated_at, b.view_count,
+        b.series_id, b.series_order,
+        s.title AS series_title,
+        s.slug AS series_slug,
+        COALESCE(s.index_blog_id = b.id, false) AS is_series_index
+      FROM personal_website_blogs b
+      LEFT JOIN personal_website_series s ON b.series_id = s.id
+      ORDER BY b.created_at DESC
     `
 
     return NextResponse.json({ blogs: rows })

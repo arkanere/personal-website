@@ -10,6 +10,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import TipTapEditor from '@/components/TipTapEditor'
 import SlugInput from '@/components/SlugInput'
+import SeriesPicker from '@/components/SeriesPicker'
 import StatusBadge from '@/components/StatusBadge'
 import { Blog, BlogStatus } from '@/lib/types/blog'
 import Link from 'next/link'
@@ -33,6 +34,11 @@ export default function EditBlogPage() {
   const [status, setStatus] = useState<BlogStatus>('draft')
   const [tags, setTags] = useState('')
   const [categories, setCategories] = useState('')
+
+  // Series membership
+  const [seriesId, setSeriesId] = useState<number | null>(null)
+  const [seriesOrder, setSeriesOrder] = useState('')
+  const [isSeriesIndex, setIsSeriesIndex] = useState(false)
 
   // SEO fields
   const [seoTitle, setSeoTitle] = useState('')
@@ -62,6 +68,9 @@ export default function EditBlogPage() {
         setStatus(blog.status)
         setTags(blog.tags.join(', '))
         setCategories(blog.categories.join(', '))
+        setSeriesId(blog.series_id ?? null)
+        setSeriesOrder(blog.series_order === null ? '' : String(blog.series_order))
+        setIsSeriesIndex(Boolean((blog as Blog & { is_series_index?: boolean }).is_series_index))
         setSeoTitle(blog.seo_metadata.metaTitle)
         setSeoDescription(blog.seo_metadata.metaDescription)
         setSeoKeywords(blog.seo_metadata.keywords)
@@ -108,6 +117,9 @@ export default function EditBlogPage() {
         status: status,
         tags: tags.split(',').map(t => t.trim()).filter(t => t),
         categories: categories.split(',').map(c => c.trim()).filter(c => c),
+        series_id: seriesId,
+        series_order: seriesOrder.trim() === '' ? null : parseInt(seriesOrder),
+        is_series_index: seriesId !== null && isSeriesIndex,
         seo_metadata: {
           metaTitle: seoTitle.trim() || title.trim(),
           metaDescription: seoDescription.trim(),
@@ -367,6 +379,17 @@ export default function EditBlogPage() {
               </button>
             </div>
           </div>
+
+          {/* Series */}
+          <SeriesPicker
+            seriesId={seriesId}
+            onSeriesChange={setSeriesId}
+            seriesOrder={seriesOrder}
+            onOrderChange={setSeriesOrder}
+            isSeriesIndex={isSeriesIndex}
+            onIsSeriesIndexChange={setIsSeriesIndex}
+            blogId={blogId}
+          />
 
           {/* Categories & Tags */}
           <div className="card-sm stack-sm">

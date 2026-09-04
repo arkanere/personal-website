@@ -9,6 +9,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { sql } from '@vercel/postgres'
 import { UpdateBlogRequest } from '@/lib/types/blog'
+import { parseSeriesId, parseSeriesOrder, seriesExists, syncSeriesIndex } from '@/lib/series'
 
 export async function PATCH(
   request: NextRequest,
@@ -66,6 +67,14 @@ export async function PATCH(
     const tagsArray = `{${tags.join(',')}}`
     const categoriesArray = `{${categories.join(',')}}`
 
+    // Clearing series_id turns the article back into a standalone post.
+    const seriesId = parseSeriesId(body.series_id)
+    const seriesOrder = seriesId === null ? null : parseSeriesOrder(body.series_order)
+
+    if (seriesId !== null && !(await seriesExists(seriesId))) {
+      return NextResponse.json({ error: 'Series not found' }, { status: 400 })
+    }
+
     const { rows } = await sql`
       UPDATE personal_website_blogs SET
         title = ${body.title},
@@ -77,11 +86,16 @@ export async function PATCH(
         status = ${body.status},
         tags = ${tagsArray}::text[],
         categories = ${categoriesArray}::text[],
+        series_id = ${seriesId},
+        series_order = ${seriesOrder},
         seo_metadata = ${JSON.stringify(body.seo_metadata)}::jsonb,
         published_at = ${body.published_at ? new Date(body.published_at).toISOString() : null}
       WHERE id = ${blogId}
       RETURNING id, title, slug, status, updated_at
     `
+
+    // Run after the update so the membership check sees the new series_id.
+    await syncSeriesIndex(blogId, seriesId, Boolean(body.is_series_index))
 
     return NextResponse.json({
       success: true,
@@ -124,6 +138,14 @@ export async function DELETE(
     if (existingBlog.length === 0) {
       return NextResponse.json({ error: 'Blog not found' }, { status: 404 })
     }
+
+    // Release the series index pointer first, so the series is simply left
+    // without an index rather than pointing at a deleted article.
+    await sql`
+      UPDATE personal_website_series
+      SET index_blog_id = NULL
+      WHERE index_blog_id = ${blogId}
+    `
 
     // Delete blog (hard delete)
     await sql`DELETE FROM personal_website_blogs WHERE id = ${blogId}`

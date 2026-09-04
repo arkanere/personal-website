@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import TipTapEditor from '@/components/TipTapEditor'
 import SlugInput from '@/components/SlugInput'
+import SeriesPicker from '@/components/SeriesPicker'
 import { BlogStatus } from '@/lib/types/blog'
 
 export default function CreateBlogPage() {
@@ -26,6 +27,11 @@ export default function CreateBlogPage() {
   const [status, setStatus] = useState<BlogStatus>('draft')
   const [tags, setTags] = useState('')
   const [categories, setCategories] = useState('')
+
+  // Series membership
+  const [seriesId, setSeriesId] = useState<number | null>(null)
+  const [seriesOrder, setSeriesOrder] = useState('')
+  const [isSeriesIndex, setIsSeriesIndex] = useState(false)
 
   // SEO fields
   const [seoTitle, setSeoTitle] = useState('')
@@ -72,6 +78,9 @@ export default function CreateBlogPage() {
         status: publishNow ? 'published' : status,
         tags: tags.split(',').map(t => t.trim()).filter(t => t),
         categories: categories.split(',').map(c => c.trim()).filter(c => c),
+        series_id: seriesId,
+        series_order: seriesOrder.trim() === '' ? null : parseInt(seriesOrder),
+        is_series_index: seriesId !== null && isSeriesIndex,
         seo_metadata: {
           metaTitle: seoTitle.trim() || title.trim(),
           metaDescription: seoDescription.trim(),
@@ -257,6 +266,16 @@ export default function CreateBlogPage() {
               </button>
             </div>
           </div>
+
+          {/* Series */}
+          <SeriesPicker
+            seriesId={seriesId}
+            onSeriesChange={setSeriesId}
+            seriesOrder={seriesOrder}
+            onOrderChange={setSeriesOrder}
+            isSeriesIndex={isSeriesIndex}
+            onIsSeriesIndexChange={setIsSeriesIndex}
+          />
 
           {/* Categories & Tags */}
           <div className="card-sm stack-sm">

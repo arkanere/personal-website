@@ -8,6 +8,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { sql } from '@vercel/postgres'
 import { CreateBlogRequest } from '@/lib/types/blog'
+import { parseSeriesId, parseSeriesOrder, seriesExists, syncSeriesIndex } from '@/lib/series'
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,6 +47,14 @@ export async function POST(request: NextRequest) {
     const tagsArray = `{${tags.join(',')}}`
     const categoriesArray = `{${categories.join(',')}}`
 
+    // A blog with no series_id is an ordinary standalone article.
+    const seriesId = parseSeriesId(body.series_id)
+    const seriesOrder = seriesId === null ? null : parseSeriesOrder(body.series_order)
+
+    if (seriesId !== null && !(await seriesExists(seriesId))) {
+      return NextResponse.json({ error: 'Series not found' }, { status: 400 })
+    }
+
     const { rows } = await sql`
       INSERT INTO personal_website_blogs (
         title,
@@ -57,6 +66,8 @@ export async function POST(request: NextRequest) {
         status,
         tags,
         categories,
+        series_id,
+        series_order,
         seo_metadata,
         published_at
       ) VALUES (
@@ -69,11 +80,15 @@ export async function POST(request: NextRequest) {
         ${body.status || 'draft'},
         ${tagsArray}::text[],
         ${categoriesArray}::text[],
+        ${seriesId},
+        ${seriesOrder},
         ${JSON.stringify(body.seo_metadata)}::jsonb,
         ${body.published_at ? new Date(body.published_at).toISOString() : null}
       )
       RETURNING id, title, slug, status
     `
+
+    await syncSeriesIndex(rows[0].id, seriesId, Boolean(body.is_series_index))
 
     return NextResponse.json({
       success: true,

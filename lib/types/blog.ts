@@ -18,6 +18,41 @@ export interface SEOMetadata {
   keywords: string
 }
 
+/**
+ * A series groups several articles together. One of its members is designated
+ * the index article (index_blog_id) — that is the article listed on the home
+ * page on the series' behalf. It is an ordinary article, written by hand.
+ */
+export interface Series {
+  id: number
+  title: string
+  slug: string
+  description: string | null
+  index_blog_id: number | null
+  created_at: Date
+  updated_at: Date
+}
+
+/** A series along with the members needed to manage it in the admin UI. */
+export interface SeriesWithPosts extends Series {
+  posts: SeriesPost[]
+}
+
+export interface SeriesPost {
+  id: number
+  title: string
+  slug: string
+  status: BlogStatus
+  series_order: number | null
+}
+
+export interface SeriesFormData {
+  title: string
+  slug: string
+  description?: string | null
+  index_blog_id?: number | null
+}
+
 export interface Blog {
   id: number
   title: string
@@ -30,6 +65,8 @@ export interface Blog {
   status: BlogStatus
   tags: string[]
   categories: string[]
+  series_id: number | null
+  series_order: number | null
   published_at: Date | null
   view_count: number
   created_at: Date
@@ -46,6 +83,8 @@ export interface BlogFormData {
   status: BlogStatus
   tags: string[]
   categories: string[]
+  series_id: number | null
+  series_order: number | null
   seo_metadata: SEOMetadata
 }
 
@@ -60,6 +99,12 @@ export interface BlogListItem {
   created_at: Date
   updated_at: Date
   view_count: number
+  series_id: number | null
+  series_order: number | null
+  series_title: string | null
+  series_slug: string | null
+  /** True when this article is the one its series shows on the home page. */
+  is_series_index: boolean
 }
 
 export interface CreateBlogRequest {
@@ -72,6 +117,10 @@ export interface CreateBlogRequest {
   status: BlogStatus
   tags?: string[]
   categories?: string[]
+  series_id?: number | null
+  series_order?: number | null
+  /** When true, the series named by series_id adopts this article as its index. */
+  is_series_index?: boolean
   seo_metadata: SEOMetadata
   published_at?: Date | null
 }
@@ -83,5 +132,7 @@ export interface UpdateBlogRequest extends CreateBlogRequest {
 export interface BlogFilters {
   search?: string
   status?: BlogStatus | 'all'
+  /** A series id, 'all', or 'none' for independent articles only. */
+  series?: number | 'all' | 'none'
   sortBy?: 'newest' | 'oldest' | 'most-viewed'
 }

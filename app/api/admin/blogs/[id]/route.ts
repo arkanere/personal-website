@@ -27,9 +27,14 @@ export async function GET(
     }
 
     const { rows } = await sql`
-      SELECT *
-      FROM personal_website_blogs
-      WHERE id = ${blogId}
+      SELECT
+        b.*,
+        s.title AS series_title,
+        s.slug AS series_slug,
+        COALESCE(s.index_blog_id = b.id, false) AS is_series_index
+      FROM personal_website_blogs b
+      LEFT JOIN personal_website_series s ON b.series_id = s.id
+      WHERE b.id = ${blogId}
     `
 
     if (rows.length === 0) {

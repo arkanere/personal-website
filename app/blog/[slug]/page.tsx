@@ -7,6 +7,11 @@ import type { Metadata } from 'next'
 
 export const revalidate = 60
 
+interface SeriesContext {
+  title: string
+  posts: { id: number; title: string; slug: string }[]
+}
+
 async function getBlogBySlug(slug: string): Promise<Blog | null> {
   try {
     const { rows } = await sql`
@@ -17,6 +22,39 @@ async function getBlogBySlug(slug: string): Promise<Blog | null> {
     return rows[0] as Blog || null
   } catch (error) {
     console.error('Error fetching blog:', error)
+    return null
+  }
+}
+
+/**
+ * The other published articles in this post's series, in reading order, so a
+ * reader can move through the series from any part of it. The index article is
+ * included, so the list reads as a complete table of contents.
+ */
+async function getSeriesContext(seriesId: number | null): Promise<SeriesContext | null> {
+  if (!seriesId) return null
+
+  try {
+    const { rows } = await sql`
+      SELECT
+        s.title,
+        COALESCE(
+          (
+            SELECT json_agg(p ORDER BY p.series_order NULLS LAST, p.published_at)
+            FROM (
+              SELECT b.id, b.title, b.slug, b.series_order, b.published_at
+              FROM personal_website_blogs b
+              WHERE b.series_id = s.id AND b.status = 'published'
+            ) p
+          ),
+          '[]'::json
+        ) AS posts
+      FROM personal_website_series s
+      WHERE s.id = ${seriesId}
+    `
+    return (rows[0] as SeriesContext) || null
+  } catch (error) {
+    console.error('Error fetching series:', error)
     return null
   }
 }
@@ -86,6 +124,8 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
     notFound()
   }
 
+  const series = await getSeriesContext(post.series_id)
+
   incrementViewCount(slug)
 
   const formatDate = (dateString: string | Date) => {
@@ -119,6 +159,25 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
             className="prose"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
+
+          {series && series.posts.length > 1 && (
+            <nav className="series-nav" aria-label={`${series.title} series`}>
+              <h2 className="series-nav-title">{series.title}</h2>
+              <ol className="series-nav-list">
+                {series.posts.map((entry) => (
+                  <li key={entry.id}>
+                    {entry.id === post.id ? (
+                      <span aria-current="page" className="series-nav-current">
+                        {entry.title}
+                      </span>
+                    ) : (
+                      <Link href={`/blog/${entry.slug}`}>{entry.title}</Link>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )}
         </article>
       </main>
     </>
