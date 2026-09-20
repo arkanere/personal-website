@@ -89,43 +89,13 @@ export function newTwmId(): string {
 }
 
 /**
- * Why a stage cannot be entered yet, or null when it can.
+ * Stages are places to work, not a pipeline with turnstiles. You can move to
+ * any of them at any time, in any order — writing does not proceed in one
+ * direction, and an editor that insists it does is just in the way.
  *
- * Entry is gated rather than exit: going back to re-dump is always allowed,
- * and should be, because that is how writing actually goes.
- *
- * An article that already has content can always return to the final stage,
- * whatever its workspace looks like. Every article written before the
- * lifecycle existed has content and no twms, so gating the final stage on
- * twms alone would strand it away from its own text.
+ * Nothing is lost by moving: each stage keeps its own material, and the
+ * written content stays on the final stage whatever else happens.
  */
-export function stageEntryBlocker(
-  workspace: Workspace,
-  target: BlogStage,
-  options: { hasContent?: boolean } = {}
-): string | null {
-  const ws = normalizeWorkspace(workspace)
-
-  switch (target) {
-    case 'braindump':
-      return null
-    case 'keywords':
-      return ws.braindump.trim() === '' ? 'Write a brain dump first' : null
-    case 'twm':
-      return ws.keywords.length === 0 ? 'Identify at least one keyword first' : null
-    case 'final':
-      if (options.hasContent) return null
-      return ws.twms.length === 0 ? 'Write at least one twm first' : null
-  }
-}
-
-export function canEnterStage(
-  workspace: Workspace,
-  target: BlogStage,
-  options: { hasContent?: boolean } = {}
-): boolean {
-  return stageEntryBlocker(workspace, target, options) === null
-}
 
 /** Why an article cannot be published yet, or null when it can. */
 export function publishBlocker(blog: { stage: BlogStage; content: string }): string | null {

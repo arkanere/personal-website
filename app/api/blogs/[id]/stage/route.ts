@@ -12,12 +12,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { sql } from '@vercel/postgres'
 import { BlogStage, Workspace } from '@/lib/types/blog'
-import {
-  isBlogStage,
-  normalizeWorkspace,
-  stageEntryBlocker,
-  validateTwm,
-} from '@/lib/lifecycle'
+import { isBlogStage, normalizeWorkspace, validateTwm } from '@/lib/lifecycle'
 
 interface StageRequest {
   stage?: BlogStage
@@ -48,7 +43,7 @@ export async function PATCH(
     }
 
     const { rows: existing } = await sql`
-      SELECT id, stage, status, workspace, content
+      SELECT id, stage, status, workspace
       FROM personal_website_blogs
       WHERE id = ${blogId}
     `
@@ -75,15 +70,6 @@ export async function PATCH(
     }
 
     const stage = body.stage ?? (isBlogStage(current.stage) ? current.stage : 'final')
-
-    // Only check the gate when the article is actually moving.
-    if (stage !== current.stage) {
-      const hasContent = String(current.content || '').trim() !== ''
-      const blocker = stageEntryBlocker(workspace, stage, { hasContent })
-      if (blocker) {
-        return NextResponse.json({ error: blocker }, { status: 422 })
-      }
-    }
 
     // A published article cannot be walked back to an unfinished stage while
     // it is still live; unpublish it first.

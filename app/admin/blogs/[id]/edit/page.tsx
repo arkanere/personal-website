@@ -366,9 +366,7 @@ export default function EditBlogPage() {
           <div>
             <StageStepper
               stage={stage}
-              workspace={workspace}
               locked={blog.status === 'published'}
-              hasContent={content.trim() !== ''}
               busy={stageBusy}
               onStageChange={(next) => persistStage(next)}
             />

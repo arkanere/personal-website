@@ -3,30 +3,24 @@
 /**
  * Stage Stepper
  *
- * The four stages of writing an article, with the gates made visible: a stage
- * you cannot enter yet is disabled and says why, rather than failing on click.
+ * The four stages of writing an article. Any of them can be opened at any
+ * time: they are places to work, not steps to be unlocked.
  */
 
 import { BlogStage } from '@/lib/types/blog'
-import { STAGES, STAGE_LABELS, stageEntryBlocker, stageIndex } from '@/lib/lifecycle'
-import { Workspace } from '@/lib/types/blog'
+import { STAGES, STAGE_LABELS, stageIndex } from '@/lib/lifecycle'
 
 interface StageStepperProps {
   stage: BlogStage
-  workspace: Workspace
-  /** Published articles are pinned to the final stage until unpublished. */
+  /** A published article stays on the final stage until it is unpublished. */
   locked?: boolean
-  /** An article with content can always return to the final stage. */
-  hasContent?: boolean
   busy?: boolean
   onStageChange: (stage: BlogStage) => void
 }
 
 export default function StageStepper({
   stage,
-  workspace,
   locked = false,
-  hasContent = false,
   busy = false,
   onStageChange,
 }: StageStepperProps) {
@@ -38,28 +32,20 @@ export default function StageStepper({
         {STAGES.map((candidate, index) => {
           const isCurrent = candidate === stage
           const isDone = index < currentIndex
-          const blocker = stageEntryBlocker(workspace, candidate, { hasContent })
           const lockedHere = locked && candidate !== 'final'
-          const disabled = busy || isCurrent || lockedHere || Boolean(blocker)
-
-          const title = isCurrent
-            ? undefined
-            : lockedHere
-              ? 'Unpublish this article before moving it back'
-              : blocker || undefined
 
           return (
             <li key={candidate} className="stage-item">
               <button
                 type="button"
                 onClick={() => onStageChange(candidate)}
-                disabled={disabled}
-                title={title}
+                disabled={busy || isCurrent || lockedHere}
+                title={lockedHere ? 'Unpublish this article to move it back' : undefined}
                 className={
                   'stage-step' +
                   (isCurrent ? ' current' : '') +
                   (isDone ? ' done' : '') +
-                  (disabled && !isCurrent ? ' blocked' : '')
+                  (lockedHere ? ' blocked' : '')
                 }
               >
                 <span className="stage-step-number">{index + 1}</span>

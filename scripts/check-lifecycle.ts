@@ -10,7 +10,7 @@
 
 import assert from 'node:assert/strict'
 import {
-  countWords, normalizeWorkspace, validateTwm, stageEntryBlocker,
+  countWords, normalizeWorkspace, validateTwm,
   publishBlocker, composeDraft, emptyWorkspace, TWM_MAX_WORDS,
 } from '@/lib/lifecycle'
 
@@ -34,31 +34,6 @@ assert.deepEqual(
   normalizeWorkspace({ keywords: ['a', '', '  b  ', 7], twms: [{ text: 'x' }, null] }),
   { braindump: '', keywords: ['a', 'b'], twms: [{ id: 'twm-1', seed: null, text: 'x' }] }
 )
-
-// stage gating: entry is gated, going back is always allowed
-const ws = emptyWorkspace()
-assert.equal(stageEntryBlocker(ws, 'braindump'), null)
-assert.match(stageEntryBlocker(ws, 'keywords')!, /brain dump/)
-assert.match(stageEntryBlocker(ws, 'twm')!, /keyword/)
-assert.match(stageEntryBlocker(ws, 'final')!, /twm/)
-
-const dumped = { ...ws, braindump: 'some thoughts' }
-assert.equal(stageEntryBlocker(dumped, 'keywords'), null)
-const keyed = { ...dumped, keywords: ['focus'] }
-assert.equal(stageEntryBlocker(keyed, 'twm'), null)
-const twmed = { ...keyed, twms: [{ id: 't1', seed: 'focus', text: 'Every unrequired word burdens the mind.' }] }
-assert.equal(stageEntryBlocker(twmed, 'final'), null)
-
-// An article with content can always return to Final, whatever its workspace.
-// Every article written before the lifecycle existed looks like this: content,
-// no twms. Gating Final on twms alone stranded them away from their own text.
-const legacy = emptyWorkspace()
-assert.match(stageEntryBlocker(legacy, 'final')!, /at least one twm/)
-assert.equal(stageEntryBlocker(legacy, 'final', { hasContent: true }), null)
-assert.equal(stageEntryBlocker(legacy, 'final', { hasContent: false }) !== null, true)
-// hasContent does not unlock the earlier gates, which are about material
-assert.match(stageEntryBlocker(legacy, 'keywords', { hasContent: true })!, /brain dump/)
-assert.match(stageEntryBlocker(legacy, 'twm', { hasContent: true })!, /keyword/)
 
 // publishing is gated on stage, not status
 assert.match(publishBlocker({ stage: 'twm', content: 'x' })!, /Only a final article/)
