@@ -277,7 +277,8 @@ export default function EditBlogPage() {
     }
   }
 
-  // Why this article cannot be published yet, or null when it can be.
+  // Gates the Published option. The disabled option says enough on its own,
+  // so the reason is not rendered.
   const cannotPublish = publishBlocker({ stage, content })
 
   if (loading) {
@@ -521,7 +522,6 @@ export default function EditBlogPage() {
                 </option>
                 <option value="archived">Archived</option>
               </select>
-              {cannotPublish && <p className="stage-blocker">{cannotPublish}</p>}
             </div>
 
             <div>

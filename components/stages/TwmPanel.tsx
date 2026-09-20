@@ -162,8 +162,6 @@ export default function TwmPanel({
           {composing ? 'Composing...' : 'Compose draft →'}
         </button>
       </div>
-
-      {composeBlocker && <p className="stage-blocker">{composeBlocker}</p>}
     </div>
   )
 }

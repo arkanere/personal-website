@@ -760,12 +760,6 @@
 
 .stage-message.ok { color: #047857; }
 
-.stage-blocker {
-  margin: 0.5rem 0 0;
-  font-size: 0.8125rem;
-  color: #b45309;
-}
-
 /* Lifecycle: stage panels */
 .stage-panel > * + * { margin-top: 0.75rem; }
 
