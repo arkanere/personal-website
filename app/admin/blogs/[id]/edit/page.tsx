@@ -12,7 +12,19 @@ import TipTapEditor from '@/components/TipTapEditor'
 import SlugInput from '@/components/SlugInput'
 import SeriesPicker from '@/components/SeriesPicker'
 import StatusBadge from '@/components/StatusBadge'
-import { Blog, BlogStatus } from '@/lib/types/blog'
+import StageStepper from '@/components/StageStepper'
+import BrainDumpPanel from '@/components/stages/BrainDumpPanel'
+import KeywordsPanel from '@/components/stages/KeywordsPanel'
+import TwmPanel from '@/components/stages/TwmPanel'
+import { Blog, BlogStage, BlogStatus, Twm, Workspace } from '@/lib/types/blog'
+import {
+  STAGE_LABELS,
+  composeDraft,
+  emptyWorkspace,
+  isBlogStage,
+  normalizeWorkspace,
+  publishBlocker,
+} from '@/lib/lifecycle'
 import Link from 'next/link'
 
 export default function EditBlogPage() {
@@ -46,6 +58,12 @@ export default function EditBlogPage() {
   const [seoKeywords, setSeoKeywords] = useState('')
   const [seoExpanded, setSeoExpanded] = useState(false)
 
+  // Lifecycle: where the article is, and the material it is being built from
+  const [stage, setStage] = useState<BlogStage>('final')
+  const [workspace, setWorkspace] = useState<Workspace>(emptyWorkspace())
+  const [stageBusy, setStageBusy] = useState(false)
+  const [stageMessage, setStageMessage] = useState<string | null>(null)
+
   // Fetch blog data
   useEffect(() => {
     fetchBlog()
@@ -74,6 +92,8 @@ export default function EditBlogPage() {
         setSeoTitle(blog.seo_metadata.metaTitle)
         setSeoDescription(blog.seo_metadata.metaDescription)
         setSeoKeywords(blog.seo_metadata.keywords)
+        setStage(isBlogStage(blog.stage) ? blog.stage : 'final')
+        setWorkspace(normalizeWorkspace(blog.workspace))
       } else {
         alert('Failed to load blog')
         router.push('/admin/blogs')
@@ -96,13 +116,22 @@ export default function EditBlogPage() {
       alert('Please enter a slug')
       return
     }
-    if (!content.trim()) {
+    if (stage === 'final' && !content.trim()) {
       alert('Please enter content')
       return
     }
     if (!authorName.trim()) {
       alert('Please enter an author name')
       return
+    }
+    // The API and the database both refuse this too; catching it here just
+    // saves a round trip and gives a better message.
+    if (status === 'published') {
+      const blocker = publishBlocker({ stage, content })
+      if (blocker) {
+        alert(blocker)
+        return
+      }
     }
 
     setSaving(true)
@@ -150,6 +179,70 @@ export default function EditBlogPage() {
     }
   }
 
+
+  /**
+   * The one path that moves an article between stages and saves its workspace.
+   * Passing no stage saves the material where it is.
+   *
+   * `nextWorkspace` is passed explicitly rather than read from state because
+   * composing a draft changes the workspace and the stage in the same breath.
+   */
+  const persistStage = async (
+    nextStage?: BlogStage,
+    nextWorkspace: Workspace = workspace
+  ): Promise<boolean> => {
+    setStageBusy(true)
+    setStageMessage(null)
+
+    try {
+      const response = await fetch(`/api/blogs/${blogId}/stage`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage: nextStage, workspace: nextWorkspace }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setStageMessage(data.error || 'Failed to save')
+        return false
+      }
+
+      setWorkspace(normalizeWorkspace(data.blog.workspace))
+      if (nextStage) setStage(nextStage)
+      setStageMessage('Saved')
+      return true
+    } catch (error) {
+      console.error('Error saving stage:', error)
+      setStageMessage('An error occurred while saving')
+      return false
+    } finally {
+      setStageBusy(false)
+    }
+  }
+
+  /**
+   * The hinge of the lifecycle: the twms become a draft article. The workspace
+   * is kept, so the finished piece still carries the thinking behind it.
+   */
+  const handleCompose = async () => {
+    const composed = composeDraft(workspace.twms)
+
+    if (content.trim() !== '' && !confirm(
+      'This will replace the existing content with the composed twms. Continue?'
+    )) {
+      return
+    }
+
+    setContent(composed)
+    await persistStage('final')
+  }
+
+  const updateWorkspace = (patch: Partial<Workspace>) => {
+    setWorkspace(prev => ({ ...prev, ...patch }))
+    setStageMessage(null)
+  }
+
   const handleDelete = async () => {
     if (!confirm(`Are you sure you want to delete "${blog?.title}"? This action cannot be undone.`)) {
       return
@@ -167,6 +260,9 @@ export default function EditBlogPage() {
       alert('An error occurred while deleting the blog')
     }
   }
+
+  // Why this article cannot be published yet, or null when it can be.
+  const cannotPublish = publishBlocker({ stage, content })
 
   if (loading) {
     return (
@@ -197,6 +293,10 @@ export default function EditBlogPage() {
               <div className="info-value">
                 <StatusBadge status={blog.status} />
               </div>
+            </div>
+            <div>
+              <span className="info-label">Stage:</span>
+              <div className="info-value">{STAGE_LABELS[stage]}</div>
             </div>
             {blog.published_at && (
               <div>
@@ -261,13 +361,70 @@ export default function EditBlogPage() {
             <p className="form-hint">{excerpt.length}/500 characters</p>
           </div>
 
-          {/* Content */}
+          {/* Lifecycle stage */}
           <div>
-            <label className="form-label">
-              Content <span className="form-required">*</span>
-            </label>
-            <TipTapEditor content={content} onChange={setContent} />
+            <StageStepper
+              stage={stage}
+              workspace={workspace}
+              locked={blog.status === 'published'}
+              busy={stageBusy}
+              onStageChange={(next) => persistStage(next)}
+            />
+
+            {stageMessage && (
+              <p className={'stage-message' + (stageMessage === 'Saved' ? ' ok' : '')}>
+                {stageMessage}
+              </p>
+            )}
           </div>
+
+          {/* The panel for wherever the article currently is */}
+          {stage === 'braindump' && (
+            <BrainDumpPanel
+              value={workspace.braindump}
+              onChange={(braindump) => updateWorkspace({ braindump })}
+            />
+          )}
+
+          {stage === 'keywords' && (
+            <KeywordsPanel
+              keywords={workspace.keywords}
+              braindump={workspace.braindump}
+              onChange={(keywords) => updateWorkspace({ keywords })}
+            />
+          )}
+
+          {stage === 'twm' && (
+            <TwmPanel
+              twms={workspace.twms}
+              keywords={workspace.keywords}
+              onChange={(twms: Twm[]) => updateWorkspace({ twms })}
+              onCompose={handleCompose}
+              composing={stageBusy}
+            />
+          )}
+
+          {/* TipTap is mounted only at the final stage, so the earlier stages
+              carry no rich-text machinery at all. */}
+          {stage === 'final' ? (
+            <div>
+              <label className="form-label">
+                Content <span className="form-required">*</span>
+              </label>
+              <TipTapEditor content={content} onChange={setContent} />
+            </div>
+          ) : (
+            <div className="stage-panel-actions">
+              <button
+                type="button"
+                onClick={() => persistStage()}
+                disabled={stageBusy}
+                className="btn btn-primary"
+              >
+                {stageBusy ? 'Saving...' : 'Save material'}
+              </button>
+            </div>
+          )}
 
           {/* SEO Settings */}
           <div className="seo-section">
@@ -336,9 +493,12 @@ export default function EditBlogPage() {
                 className="form-input"
               >
                 <option value="draft">Draft</option>
-                <option value="published">Published</option>
+                <option value="published" disabled={cannotPublish !== null}>
+                  Published
+                </option>
                 <option value="archived">Archived</option>
               </select>
+              {cannotPublish && <p className="stage-blocker">{cannotPublish}</p>}
             </div>
 
             <div>
