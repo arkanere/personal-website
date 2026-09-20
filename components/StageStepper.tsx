@@ -16,6 +16,8 @@ interface StageStepperProps {
   workspace: Workspace
   /** Published articles are pinned to the final stage until unpublished. */
   locked?: boolean
+  /** An article with content can always return to the final stage. */
+  hasContent?: boolean
   busy?: boolean
   onStageChange: (stage: BlogStage) => void
 }
@@ -24,6 +26,7 @@ export default function StageStepper({
   stage,
   workspace,
   locked = false,
+  hasContent = false,
   busy = false,
   onStageChange,
 }: StageStepperProps) {
@@ -35,7 +38,7 @@ export default function StageStepper({
         {STAGES.map((candidate, index) => {
           const isCurrent = candidate === stage
           const isDone = index < currentIndex
-          const blocker = stageEntryBlocker(workspace, candidate)
+          const blocker = stageEntryBlocker(workspace, candidate, { hasContent })
           const lockedHere = locked && candidate !== 'final'
           const disabled = busy || isCurrent || lockedHere || Boolean(blocker)
 

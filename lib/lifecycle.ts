@@ -93,8 +93,17 @@ export function newTwmId(): string {
  *
  * Entry is gated rather than exit: going back to re-dump is always allowed,
  * and should be, because that is how writing actually goes.
+ *
+ * An article that already has content can always return to the final stage,
+ * whatever its workspace looks like. Every article written before the
+ * lifecycle existed has content and no twms, so gating the final stage on
+ * twms alone would strand it away from its own text.
  */
-export function stageEntryBlocker(workspace: Workspace, target: BlogStage): string | null {
+export function stageEntryBlocker(
+  workspace: Workspace,
+  target: BlogStage,
+  options: { hasContent?: boolean } = {}
+): string | null {
   const ws = normalizeWorkspace(workspace)
 
   switch (target) {
@@ -105,12 +114,17 @@ export function stageEntryBlocker(workspace: Workspace, target: BlogStage): stri
     case 'twm':
       return ws.keywords.length === 0 ? 'Identify at least one keyword first' : null
     case 'final':
+      if (options.hasContent) return null
       return ws.twms.length === 0 ? 'Write at least one twm first' : null
   }
 }
 
-export function canEnterStage(workspace: Workspace, target: BlogStage): boolean {
-  return stageEntryBlocker(workspace, target) === null
+export function canEnterStage(
+  workspace: Workspace,
+  target: BlogStage,
+  options: { hasContent?: boolean } = {}
+): boolean {
+  return stageEntryBlocker(workspace, target, options) === null
 }
 
 /** Why an article cannot be published yet, or null when it can. */

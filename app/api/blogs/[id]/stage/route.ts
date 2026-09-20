@@ -48,7 +48,7 @@ export async function PATCH(
     }
 
     const { rows: existing } = await sql`
-      SELECT id, stage, status, workspace
+      SELECT id, stage, status, workspace, content
       FROM personal_website_blogs
       WHERE id = ${blogId}
     `
@@ -78,7 +78,8 @@ export async function PATCH(
 
     // Only check the gate when the article is actually moving.
     if (stage !== current.stage) {
-      const blocker = stageEntryBlocker(workspace, stage)
+      const hasContent = String(current.content || '').trim() !== ''
+      const blocker = stageEntryBlocker(workspace, stage, { hasContent })
       if (blocker) {
         return NextResponse.json({ error: blocker }, { status: 422 })
       }

@@ -960,3 +960,13 @@
   border-color: #fca5a5;
   color: #b91c1c;
 }
+
+.stage-note {
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.375rem;
+  background-color: #eff6ff;
+  font-size: 0.875rem;
+  color: #1e40af;
+}
