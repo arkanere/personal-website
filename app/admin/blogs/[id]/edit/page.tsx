@@ -238,22 +238,6 @@ export default function EditBlogPage() {
     await persistStage('final')
   }
 
-  /**
-   * Moving away from the final stage hides the written content behind the
-   * stepper. Nothing is lost, but it looks like loss, so say so first.
-   */
-  const handleStageChange = async (next: BlogStage) => {
-    if (next !== 'final' && stage === 'final' && content.trim() !== '') {
-      const ok = confirm(
-        'This article has written content.\n\n' +
-        'Moving it back to an earlier stage keeps the content safe, but hides ' +
-        'it until you return to Final. Continue?'
-      )
-      if (!ok) return
-    }
-    await persistStage(next)
-  }
-
   const updateWorkspace = (patch: Partial<Workspace>) => {
     setWorkspace(prev => ({ ...prev, ...patch }))
     setStageMessage(null)
@@ -386,7 +370,7 @@ export default function EditBlogPage() {
               locked={blog.status === 'published'}
               hasContent={content.trim() !== ''}
               busy={stageBusy}
-              onStageChange={handleStageChange}
+              onStageChange={(next) => persistStage(next)}
             />
 
             {stage !== 'final' && content.trim() !== '' && (
