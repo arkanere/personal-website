@@ -75,8 +75,15 @@ export default function AdminBlogsPage() {
       result = result.filter(blog => blog.series_id === parseInt(seriesFilter))
     }
 
-    // Sort
+    // Sort: published articles come first, then drafts, then archived.
+    // The chosen sort order applies within each status band.
+    const statusRank = (status: string) =>
+      status === 'published' ? 0 : status === 'draft' ? 1 : 2
+
     result.sort((a, b) => {
+      const byStatus = statusRank(a.status) - statusRank(b.status)
+      if (byStatus !== 0) return byStatus
+
       if (sortBy === 'newest') {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       } else if (sortBy === 'oldest') {
