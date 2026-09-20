@@ -8,8 +8,10 @@
  * same way the API blocks it on save.
  */
 
+import { useState } from 'react'
 import { Twm } from '@/lib/types/blog'
 import { TWM_MAX_WORDS, countWords, newTwmId } from '@/lib/lifecycle'
+import TwmModal from './TwmModal'
 
 interface TwmPanelProps {
   twms: Twm[]
@@ -24,12 +26,20 @@ export default function TwmPanel({
   onChange,
   onCompose,
 }: TwmPanelProps) {
+  // Which twm the modal is editing: an id, 'new', or null when it is closed.
+  const [editing, setEditing] = useState<string | 'new' | null>(null)
+
   const update = (id: string, patch: Partial<Twm>) => {
     onChange(twms.map(t => (t.id === id ? { ...t, ...patch } : t)))
   }
 
-  const add = (seed: string | null = null) => {
-    onChange([...twms, { id: newTwmId(), seed, text: '' }])
+  const saveFromModal = (text: string) => {
+    if (editing === 'new') {
+      onChange([...twms, { id: newTwmId(), seed: null, text }])
+    } else if (editing) {
+      update(editing, { text })
+    }
+    setEditing(null)
   }
 
   /** One empty twm per keyword, skipping keywords that already have one. */
@@ -69,34 +79,32 @@ export default function TwmPanel({
 
           return (
             <div key={twm.id} className={'twm-row' + (over ? ' over' : '')}>
-              <div className="twm-row-main">
-                <select
-                  value={twm.seed ?? ''}
-                  onChange={(e) => update(twm.id, { seed: e.target.value || null })}
-                  className="twm-seed"
-                >
-                  <option value="">No seed</option>
-                  {keywords.map(k => (
-                    <option key={k} value={k}>{k}</option>
-                  ))}
-                  {/* A seed can outlive the keyword it came from. */}
-                  {twm.seed && !keywords.includes(twm.seed) && (
-                    <option value={twm.seed}>{twm.seed}</option>
-                  )}
-                </select>
+              <button
+                type="button"
+                className="twm-row-text"
+                onClick={() => setEditing(twm.id)}
+              >
+                {twm.text.trim() === '' ? 'Empty twm' : twm.text}
+              </button>
 
-                <input
-                  type="text"
-                  value={twm.text}
-                  onChange={(e) => update(twm.id, { text: e.target.value })}
-                  className="twm-text"
-                  placeholder="Say it in twenty words or fewer..."
-                />
+              <select
+                value={twm.seed ?? ''}
+                onChange={(e) => update(twm.id, { seed: e.target.value || null })}
+                className="twm-seed"
+              >
+                <option value="">No seed</option>
+                {keywords.map(k => (
+                  <option key={k} value={k}>{k}</option>
+                ))}
+                {/* A seed can outlive the keyword it came from. */}
+                {twm.seed && !keywords.includes(twm.seed) && (
+                  <option value={twm.seed}>{twm.seed}</option>
+                )}
+              </select>
 
-                <span className={'twm-count' + (over ? ' over' : '')}>
-                  {words}/{TWM_MAX_WORDS}
-                </span>
-              </div>
+              <span className={'twm-count' + (over ? ' over' : '')}>
+                {words}/{TWM_MAX_WORDS}
+              </span>
 
               <div className="twm-row-actions">
                 <button
@@ -136,7 +144,7 @@ export default function TwmPanel({
       </div>
 
       <div className="stage-panel-actions">
-        <button type="button" onClick={() => add()} className="btn btn-secondary">
+        <button type="button" onClick={() => setEditing('new')} className="btn btn-secondary">
           Add twm
         </button>
         {keywords.length > 0 && (
@@ -159,6 +167,14 @@ export default function TwmPanel({
           Compose draft →
         </button>
       </div>
+
+      {editing !== null && (
+        <TwmModal
+          initialText={editing === 'new' ? '' : twms.find(t => t.id === editing)?.text || ''}
+          onSave={saveFromModal}
+          onCancel={() => setEditing(null)}
+        />
+      )}
     </div>
   )
 }
