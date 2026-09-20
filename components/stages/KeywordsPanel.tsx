@@ -79,11 +79,6 @@ export default function KeywordsPanel({ keywords, braindump, onChange }: Keyword
 
   return (
     <div className="stage-panel">
-      <p className="stage-panel-hint">
-        Name the concepts the dump is circling. Each one can seed a twm in the
-        next stage.
-      </p>
-
       <div className="keyword-chips">
         {keywords.length === 0 && (
           <span className="keyword-empty">No keywords yet</span>

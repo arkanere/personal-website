@@ -390,8 +390,7 @@ export default function EditBlogPage() {
 
             {stage !== 'final' && content.trim() !== '' && (
               <p className="stage-note">
-                This article already has written content. It is kept exactly as
-                it is — go to <strong>Final</strong> to see and edit it.
+                Written content is kept — it is on the Final stage.
               </p>
             )}
 

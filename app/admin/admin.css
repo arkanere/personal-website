@@ -767,20 +767,7 @@
 }
 
 /* Lifecycle: stage panels */
-.stage-panel {
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  background-color: white;
-  padding: 1rem;
-}
-
 .stage-panel > * + * { margin-top: 0.75rem; }
-
-.stage-panel-hint {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #4b5563;
-}
 
 .stage-panel-actions {
   display: flex;
@@ -963,10 +950,6 @@
 
 .stage-note {
   margin: 0.5rem 0 0;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #bfdbfe;
-  border-radius: 0.375rem;
-  background-color: #eff6ff;
-  font-size: 0.875rem;
-  color: #1e40af;
+  font-size: 0.8125rem;
+  color: #6b7280;
 }

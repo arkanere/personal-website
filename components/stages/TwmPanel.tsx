@@ -65,12 +65,6 @@ export default function TwmPanel({
 
   return (
     <div className="stage-panel">
-      <p className="stage-panel-hint">
-        A twm is the smallest unit of complete meaning, in at most{' '}
-        {TWM_MAX_WORDS} words. Seed each one with a keyword and say the thing
-        once, properly.
-      </p>
-
       <div className="twm-list">
         {twms.map((twm, index) => {
           const words = countWords(twm.text)
