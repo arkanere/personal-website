@@ -4,28 +4,12 @@
 
 export type BlogStatus = 'draft' | 'published' | 'archived'
 
-/**
- * Where an article is in the writing lifecycle, as opposed to who can see it
- * (that is BlogStatus). See lib/lifecycle.ts for the rules that connect them.
- */
-export type BlogStage = 'braindump' | 'keywords' | 'twm' | 'final'
-
 /** A twenty-words-max unit: the smallest unit of complete meaning. */
 export interface Twm {
   id: string
   /** The keyword this twm was seeded by, if any. */
   seed: string | null
   text: string
-}
-
-/**
- * The pre-final material an article is built from. Kept after composing so the
- * finished piece still carries the thinking that produced it.
- */
-export interface Workspace {
-  braindump: string
-  keywords: string[]
-  twms: Twm[]
 }
 
 export interface FeaturedImage {
@@ -91,8 +75,9 @@ export interface Blog {
   categories: string[]
   series_id: number | null
   series_order: number | null
-  stage: BlogStage
-  workspace: Workspace
+  braindump: string
+  keywords: string[]
+  twms: Twm[]
   published_at: Date | null
   view_count: number
   created_at: Date
@@ -129,7 +114,6 @@ export interface BlogListItem {
   series_order: number | null
   series_title: string | null
   series_slug: string | null
-  stage: BlogStage
   /** True when this article is the one its series shows on the home page. */
   is_series_index: boolean
 }
@@ -148,9 +132,9 @@ export interface CreateBlogRequest {
   series_order?: number | null
   /** When true, the series named by series_id adopts this article as its index. */
   is_series_index?: boolean
-  /** Defaults to 'final', so callers that predate the lifecycle keep working. */
-  stage?: BlogStage
-  workspace?: Workspace
+  braindump?: string
+  keywords?: string[]
+  twms?: Twm[]
   seo_metadata: SEOMetadata
   published_at?: Date | null
 }
@@ -164,6 +148,5 @@ export interface BlogFilters {
   status?: BlogStatus | 'all'
   /** A series id, 'all', or 'none' for independent articles only. */
   series?: number | 'all' | 'none'
-  stage?: BlogStage | 'all'
   sortBy?: 'newest' | 'oldest' | 'most-viewed'
 }

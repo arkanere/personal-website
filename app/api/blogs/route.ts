@@ -9,7 +9,7 @@ import { authOptions } from '@/lib/auth'
 import { sql } from '@vercel/postgres'
 import { CreateBlogRequest } from '@/lib/types/blog'
 import { parseSeriesId, parseSeriesOrder, seriesExists, syncSeriesIndex } from '@/lib/series'
-import { isBlogStage, normalizeWorkspace, publishBlocker } from '@/lib/lifecycle'
+import { canPublish, normalizeKeywords, normalizeTwms, validateTwm } from '@/lib/lifecycle'
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,18 +30,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Callers that predate the lifecycle send no stage and mean 'final'.
-    const stage = isBlogStage(body.stage) ? body.stage : 'final'
-    const workspace = normalizeWorkspace(body.workspace)
     const content = body.content || ''
     const status = body.status || 'draft'
+    const braindump = body.braindump || ''
+    const keywords = normalizeKeywords(body.keywords)
+    const twms = normalizeTwms(body.twms)
 
-    // Only a finished article can be published.
-    if (status === 'published') {
-      const blocker = publishBlocker({ stage, content })
-      if (blocker) {
-        return NextResponse.json({ error: blocker }, { status: 422 })
-      }
+    // You publish what is in the final format.
+    if (status === 'published' && !canPublish(content)) {
+      return NextResponse.json(
+        { error: 'The final format is empty, so there is nothing to publish' },
+        { status: 422 }
+      )
+    }
+
+    for (const twm of twms) {
+      const problem = validateTwm(twm.text)
+      if (problem) return NextResponse.json({ error: problem }, { status: 422 })
     }
 
     // Check if slug already exists
@@ -84,8 +89,9 @@ export async function POST(request: NextRequest) {
         categories,
         series_id,
         series_order,
-        stage,
-        workspace,
+        braindump,
+        keywords,
+        twms,
         seo_metadata,
         published_at
       ) VALUES (
@@ -100,12 +106,13 @@ export async function POST(request: NextRequest) {
         ${categoriesArray}::text[],
         ${seriesId},
         ${seriesOrder},
-        ${stage},
-        ${JSON.stringify(workspace)}::jsonb,
+        ${braindump},
+        ${`{${keywords.join(',')}}`}::text[],
+        ${JSON.stringify(twms)}::jsonb,
         ${JSON.stringify(body.seo_metadata)}::jsonb,
         ${body.published_at ? new Date(body.published_at).toISOString() : null}
       )
-      RETURNING id, title, slug, status, stage
+      RETURNING id, title, slug, status
     `
 
     await syncSeriesIndex(rows[0].id, seriesId, Boolean(body.is_series_index))

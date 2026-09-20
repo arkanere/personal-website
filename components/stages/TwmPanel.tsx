@@ -16,7 +16,6 @@ interface TwmPanelProps {
   keywords: string[]
   onChange: (twms: Twm[]) => void
   onCompose: () => void
-  composing?: boolean
 }
 
 export default function TwmPanel({
@@ -24,7 +23,6 @@ export default function TwmPanel({
   keywords,
   onChange,
   onCompose,
-  composing = false,
 }: TwmPanelProps) {
   const update = (id: string, patch: Partial<Twm>) => {
     onChange(twms.map(t => (t.id === id ? { ...t, ...patch } : t)))
@@ -56,12 +54,11 @@ export default function TwmPanel({
   }
 
   const overLong = twms.filter(t => countWords(t.text) > TWM_MAX_WORDS).length
-  const empty = twms.filter(t => t.text.trim() === '').length
+  const written = twms.filter(t => t.text.trim() !== '').length
   const composeBlocker =
-    twms.length === 0 ? 'Write at least one twm first'
+    written === 0 ? 'Write at least one twm first'
       : overLong > 0 ? `${overLong} twm(s) are over ${TWM_MAX_WORDS} words`
-        : empty === twms.length ? 'Every twm is empty'
-          : null
+        : null
 
   return (
     <div className="stage-panel">
@@ -155,11 +152,11 @@ export default function TwmPanel({
         <button
           type="button"
           onClick={onCompose}
-          disabled={composing || Boolean(composeBlocker)}
+          disabled={Boolean(composeBlocker)}
           title={composeBlocker || undefined}
           className="btn btn-primary"
         >
-          {composing ? 'Composing...' : 'Compose draft →'}
+          Compose draft →
         </button>
       </div>
     </div>

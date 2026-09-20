@@ -12,19 +12,12 @@ import TipTapEditor from '@/components/TipTapEditor'
 import SlugInput from '@/components/SlugInput'
 import SeriesPicker from '@/components/SeriesPicker'
 import StatusBadge from '@/components/StatusBadge'
-import StageStepper from '@/components/StageStepper'
+import StageTabs, { WritingStage } from '@/components/StageTabs'
 import BrainDumpPanel from '@/components/stages/BrainDumpPanel'
 import KeywordsPanel from '@/components/stages/KeywordsPanel'
 import TwmPanel from '@/components/stages/TwmPanel'
-import { Blog, BlogStage, BlogStatus, Twm, Workspace } from '@/lib/types/blog'
-import {
-  STAGE_LABELS,
-  composeDraft,
-  emptyWorkspace,
-  isBlogStage,
-  normalizeWorkspace,
-  publishBlocker,
-} from '@/lib/lifecycle'
+import { Blog, BlogStatus, Twm } from '@/lib/types/blog'
+import { canPublish, composeDraft, normalizeKeywords, normalizeTwms } from '@/lib/lifecycle'
 import Link from 'next/link'
 
 export default function EditBlogPage() {
@@ -58,11 +51,11 @@ export default function EditBlogPage() {
   const [seoKeywords, setSeoKeywords] = useState('')
   const [seoExpanded, setSeoExpanded] = useState(false)
 
-  // Lifecycle: where the article is, and the material it is being built from
-  const [stage, setStage] = useState<BlogStage>('final')
-  const [workspace, setWorkspace] = useState<Workspace>(emptyWorkspace())
-  const [stageBusy, setStageBusy] = useState(false)
-  const [stageMessage, setStageMessage] = useState<string | null>(null)
+  // The four stages. Which one is open is a view, not something to store.
+  const [stage, setStage] = useState<WritingStage>('final')
+  const [braindump, setBraindump] = useState('')
+  const [keywords, setKeywords] = useState<string[]>([])
+  const [twms, setTwms] = useState<Twm[]>([])
 
   // Fetch blog data
   useEffect(() => {
@@ -92,8 +85,9 @@ export default function EditBlogPage() {
         setSeoTitle(blog.seo_metadata.metaTitle)
         setSeoDescription(blog.seo_metadata.metaDescription)
         setSeoKeywords(blog.seo_metadata.keywords)
-        setStage(isBlogStage(blog.stage) ? blog.stage : 'final')
-        setWorkspace(normalizeWorkspace(blog.workspace))
+        setBraindump(blog.braindump || '')
+        setKeywords(normalizeKeywords(blog.keywords))
+        setTwms(normalizeTwms(blog.twms))
       } else {
         alert('Failed to load blog')
         router.push('/admin/blogs')
@@ -116,22 +110,13 @@ export default function EditBlogPage() {
       alert('Please enter a slug')
       return
     }
-    if (stage === 'final' && !content.trim()) {
-      alert('Please enter content')
-      return
-    }
     if (!authorName.trim()) {
       alert('Please enter an author name')
       return
     }
-    // The API and the database both refuse this too; catching it here just
-    // saves a round trip and gives a better message.
-    if (status === 'published') {
-      const blocker = publishBlocker({ stage, content })
-      if (blocker) {
-        alert(blocker)
-        return
-      }
+    if (status === 'published' && !canPublish(content)) {
+      alert('The final format is empty, so there is nothing to publish')
+      return
     }
 
     setSaving(true)
@@ -149,6 +134,9 @@ export default function EditBlogPage() {
         series_id: seriesId,
         series_order: seriesOrder.trim() === '' ? null : parseInt(seriesOrder),
         is_series_index: seriesId !== null && isSeriesIndex,
+        braindump,
+        keywords,
+        twms,
         seo_metadata: {
           metaTitle: seoTitle.trim() || title.trim(),
           metaDescription: seoDescription.trim(),
@@ -181,66 +169,18 @@ export default function EditBlogPage() {
 
 
   /**
-   * The one path that moves an article between stages and saves its workspace.
-   * Passing no stage saves the material where it is.
-   *
-   * `nextWorkspace` is passed explicitly rather than read from state because
-   * composing a draft changes the workspace and the stage in the same breath.
+   * The twms become the final format. The twms are kept, so the finished
+   * piece still carries the thinking behind it.
    */
-  const persistStage = async (
-    nextStage?: BlogStage,
-    nextWorkspace: Workspace = workspace
-  ): Promise<boolean> => {
-    setStageBusy(true)
-    setStageMessage(null)
-
-    try {
-      const response = await fetch(`/api/blogs/${blogId}/stage`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stage: nextStage, workspace: nextWorkspace }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setStageMessage(data.error || 'Failed to save')
-        return false
-      }
-
-      setWorkspace(normalizeWorkspace(data.blog.workspace))
-      if (nextStage) setStage(nextStage)
-      setStageMessage('Saved')
-      return true
-    } catch (error) {
-      console.error('Error saving stage:', error)
-      setStageMessage('An error occurred while saving')
-      return false
-    } finally {
-      setStageBusy(false)
-    }
-  }
-
-  /**
-   * The hinge of the lifecycle: the twms become a draft article. The workspace
-   * is kept, so the finished piece still carries the thinking behind it.
-   */
-  const handleCompose = async () => {
-    const composed = composeDraft(workspace.twms)
-
+  const handleCompose = () => {
     if (content.trim() !== '' && !confirm(
-      'This will replace the existing content with the composed twms. Continue?'
+      'This will replace the final format with the composed twms. Continue?'
     )) {
       return
     }
 
-    setContent(composed)
-    await persistStage('final')
-  }
-
-  const updateWorkspace = (patch: Partial<Workspace>) => {
-    setWorkspace(prev => ({ ...prev, ...patch }))
-    setStageMessage(null)
+    setContent(composeDraft(twms))
+    setStage('final')
   }
 
   const handleDelete = async () => {
@@ -261,9 +201,8 @@ export default function EditBlogPage() {
     }
   }
 
-  // Gates the Published option. The disabled option says enough on its own,
-  // so the reason is not rendered.
-  const cannotPublish = publishBlocker({ stage, content })
+  // Gates the Published option. The disabled option says enough on its own.
+  const publishable = canPublish(content)
 
   if (loading) {
     return (
@@ -294,10 +233,6 @@ export default function EditBlogPage() {
               <div className="info-value">
                 <StatusBadge status={blog.status} />
               </div>
-            </div>
-            <div>
-              <span className="info-label">Stage:</span>
-              <div className="info-value">{STAGE_LABELS[stage]}</div>
             </div>
             {blog.published_at && (
               <div>
@@ -362,74 +297,34 @@ export default function EditBlogPage() {
             <p className="form-hint">{excerpt.length}/500 characters</p>
           </div>
 
-          {/* Lifecycle stage */}
-          <div>
-            <StageStepper
-              stage={stage}
-              locked={blog.status === 'published'}
-              busy={stageBusy}
-              onStageChange={(next) => persistStage(next)}
-            />
+          {/* The four stages */}
+          <StageTabs stage={stage} onChange={setStage} />
 
-            {stage !== 'final' && content.trim() !== '' && (
-              <p className="stage-note">
-                Written content is kept — it is on the Final stage.
-              </p>
-            )}
-
-            {stageMessage && (
-              <p className={'stage-message' + (stageMessage === 'Saved' ? ' ok' : '')}>
-                {stageMessage}
-              </p>
-            )}
-          </div>
-
-          {/* The panel for wherever the article currently is */}
           {stage === 'braindump' && (
-            <BrainDumpPanel
-              value={workspace.braindump}
-              onChange={(braindump) => updateWorkspace({ braindump })}
-            />
+            <BrainDumpPanel value={braindump} onChange={setBraindump} />
           )}
 
           {stage === 'keywords' && (
             <KeywordsPanel
-              keywords={workspace.keywords}
-              braindump={workspace.braindump}
-              onChange={(keywords) => updateWorkspace({ keywords })}
+              keywords={keywords}
+              braindump={braindump}
+              onChange={setKeywords}
             />
           )}
 
           {stage === 'twm' && (
             <TwmPanel
-              twms={workspace.twms}
-              keywords={workspace.keywords}
-              onChange={(twms: Twm[]) => updateWorkspace({ twms })}
+              twms={twms}
+              keywords={keywords}
+              onChange={setTwms}
               onCompose={handleCompose}
-              composing={stageBusy}
             />
           )}
 
-          {/* TipTap is mounted only at the final stage, so the earlier stages
+          {/* TipTap is mounted only on the final format, so the other stages
               carry no rich-text machinery at all. */}
-          {stage === 'final' ? (
-            <div>
-              <label className="form-label">
-                Content <span className="form-required">*</span>
-              </label>
-              <TipTapEditor content={content} onChange={setContent} />
-            </div>
-          ) : (
-            <div className="stage-panel-actions">
-              <button
-                type="button"
-                onClick={() => persistStage()}
-                disabled={stageBusy}
-                className="btn btn-primary"
-              >
-                {stageBusy ? 'Saving...' : 'Save material'}
-              </button>
-            </div>
+          {stage === 'final' && (
+            <TipTapEditor content={content} onChange={setContent} />
           )}
 
           {/* SEO Settings */}
@@ -499,7 +394,7 @@ export default function EditBlogPage() {
                 className="form-input"
               >
                 <option value="draft">Draft</option>
-                <option value="published" disabled={cannotPublish !== null}>
+                <option value="published" disabled={!publishable}>
                   Published
                 </option>
                 <option value="archived">Archived</option>

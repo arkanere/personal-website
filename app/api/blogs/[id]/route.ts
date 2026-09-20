@@ -10,7 +10,7 @@ import { authOptions } from '@/lib/auth'
 import { sql } from '@vercel/postgres'
 import { UpdateBlogRequest } from '@/lib/types/blog'
 import { parseSeriesId, parseSeriesOrder, seriesExists, syncSeriesIndex } from '@/lib/series'
-import { isBlogStage, publishBlocker } from '@/lib/lifecycle'
+import { canPublish, normalizeKeywords, normalizeTwms, validateTwm } from '@/lib/lifecycle'
 
 export async function PATCH(
   request: NextRequest,
@@ -43,7 +43,7 @@ export async function PATCH(
 
     // Check if blog exists
     const { rows: existingBlog } = await sql`
-      SELECT id, stage FROM personal_website_blogs WHERE id = ${blogId}
+      SELECT id FROM personal_website_blogs WHERE id = ${blogId}
     `
 
     if (existingBlog.length === 0) {
@@ -51,17 +51,21 @@ export async function PATCH(
     }
 
     const content = body.content || ''
+    const braindump = body.braindump || ''
+    const keywords = normalizeKeywords(body.keywords)
+    const twms = normalizeTwms(body.twms)
 
-    // This route does not move an article between stages — that is the job of
-    // PATCH /api/blogs/[id]/stage — so the stored stage wins over the body.
-    const stage = isBlogStage(existingBlog[0].stage) ? existingBlog[0].stage : 'final'
+    // You publish what is in the final format.
+    if (body.status === 'published' && !canPublish(content)) {
+      return NextResponse.json(
+        { error: 'The final format is empty, so there is nothing to publish' },
+        { status: 422 }
+      )
+    }
 
-    // Only a finished article can be published.
-    if (body.status === 'published') {
-      const blocker = publishBlocker({ stage, content })
-      if (blocker) {
-        return NextResponse.json({ error: blocker }, { status: 422 })
-      }
+    for (const twm of twms) {
+      const problem = validateTwm(twm.text)
+      if (problem) return NextResponse.json({ error: problem }, { status: 422 })
     }
 
     // Check if slug is taken by another blog
@@ -104,6 +108,9 @@ export async function PATCH(
         categories = ${categoriesArray}::text[],
         series_id = ${seriesId},
         series_order = ${seriesOrder},
+        braindump = ${braindump},
+        keywords = ${`{${keywords.join(',')}}`}::text[],
+        twms = ${JSON.stringify(twms)}::jsonb,
         seo_metadata = ${JSON.stringify(body.seo_metadata)}::jsonb,
         published_at = ${body.published_at ? new Date(body.published_at).toISOString() : null}
       WHERE id = ${blogId}

@@ -5,13 +5,13 @@
  * stage gates, and the publish guard are what the UI and the API both lean on.
  * This asserts them directly, with no database and no server needed.
  *
- * To run: npx tsx scripts/check-lifecycle.ts
+ * To run: npx tsx scripts/check-writing.ts
  */
 
 import assert from 'node:assert/strict'
 import {
-  countWords, normalizeWorkspace, validateTwm,
-  publishBlocker, composeDraft, emptyWorkspace, TWM_MAX_WORDS,
+  countWords, validateTwm, canPublish, composeDraft,
+  normalizeTwms, normalizeKeywords, TWM_MAX_WORDS,
 } from '@/lib/lifecycle'
 
 // countWords matches twm's CLI behaviour, but returns 0 for empty
@@ -19,26 +19,25 @@ assert.equal(countWords(''), 0)
 assert.equal(countWords('   '), 0)
 assert.equal(countWords('one  two\nthree'), 3)
 
-// the 20-word ceiling
+// the 20-word ceiling. An empty twm is allowed: a half-written row is normal
+// while working, and only the composed result has to amount to anything.
 const twenty = Array(20).fill('w').join(' ')
 assert.equal(validateTwm(twenty), null)
 assert.match(validateTwm(twenty + ' w')!, /at most 20 words \(this one has 21\)/)
-assert.match(validateTwm('  ')!, /cannot be empty/)
+assert.equal(validateTwm('  '), null)
 assert.equal(TWM_MAX_WORDS, 20)
 
-// normalizeWorkspace survives junk, which is the whole reason it exists
-assert.deepEqual(normalizeWorkspace(undefined), emptyWorkspace())
-assert.deepEqual(normalizeWorkspace({}), emptyWorkspace())
-assert.deepEqual(normalizeWorkspace('nonsense'), emptyWorkspace())
-assert.deepEqual(
-  normalizeWorkspace({ keywords: ['a', '', '  b  ', 7], twms: [{ text: 'x' }, null] }),
-  { braindump: '', keywords: ['a', 'b'], twms: [{ id: 'twm-1', seed: null, text: 'x' }] }
-)
+// normalizers survive junk, which is the whole reason they exist
+assert.deepEqual(normalizeKeywords(undefined), [])
+assert.deepEqual(normalizeKeywords('nonsense'), [])
+assert.deepEqual(normalizeKeywords(['a', '', '  b  ', 7]), ['a', 'b'])
+assert.deepEqual(normalizeTwms(undefined), [])
+assert.deepEqual(normalizeTwms([{ text: 'x' }, null]), [{ id: 'twm-1', seed: null, text: 'x' }])
 
-// publishing is gated on stage, not status
-assert.match(publishBlocker({ stage: 'twm', content: 'x' })!, /Only a final article/)
-assert.match(publishBlocker({ stage: 'final', content: '   ' })!, /needs content/)
-assert.equal(publishBlocker({ stage: 'final', content: '<p>x</p>' }), null)
+// publishing needs a non-empty final format, and nothing else
+assert.equal(canPublish(''), false)
+assert.equal(canPublish('   '), false)
+assert.equal(canPublish('<p>x</p>'), true)
 
 // composeDraft: 4 twms per paragraph, html-escaped
 assert.equal(composeDraft([]), '')
@@ -47,4 +46,4 @@ assert.equal(composeDraft(five), '<p>s1. s2. s3. s4.</p>\n<p>s5.</p>')
 assert.equal(composeDraft([{ id: 't', seed: null, text: 'a < b & c' }]), '<p>a &lt; b &amp; c</p>')
 assert.equal(composeDraft([{ id: 't', seed: null, text: '   ' }]), '')
 
-console.log('✓ all lifecycle assertions passed')
+console.log('✓ all writing rule assertions passed')
