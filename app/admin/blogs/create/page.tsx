@@ -1,12 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import TipTapEditor from '@/components/TipTapEditor'
 import SlugInput from '@/components/SlugInput'
 import SeriesPicker from '@/components/SeriesPicker'
-import { BlogStatus } from '@/lib/types/blog'
+import StageTabs, { WritingStage } from '@/components/StageTabs'
+import BrainDumpPanel from '@/components/stages/BrainDumpPanel'
+import DraftKeywordsPanel from '@/components/stages/DraftKeywordsPanel'
+import TwmPanel from '@/components/stages/TwmPanel'
+import { BlogStatus, Twm } from '@/lib/types/blog'
+import { canPublish, composeDraft } from '@/lib/lifecycle'
+import { useDebounce } from '@/lib/hooks/useDebounce'
 
 export default function CreateBlogPage() {
   const router = useRouter()
@@ -34,6 +40,16 @@ export default function CreateBlogPage() {
   const [seoKeywords, setSeoKeywords] = useState('')
   const [seoExpanded, setSeoExpanded] = useState(false)
 
+  // The four stages. Which one is open is a view, not something to store.
+  const [stage, setStage] = useState<WritingStage>('braindump')
+  const [braindump, setBraindump] = useState('')
+  const [draftKeywords, setDraftKeywords] = useState<string[]>([])
+  const [twms, setTwms] = useState<Twm[]>([])
+  const [autosave, setAutosave] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle')
+
+  // Set once autosave has created the row; from then on this page edits it.
+  const [blogId, setBlogId] = useState<number | null>(null)
+
   // Auto-sync SEO title with main title
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle)
@@ -41,6 +57,100 @@ export default function CreateBlogPage() {
       setSeoTitle(newTitle)
     }
   }
+
+  /**
+   * Autosave the writing, and only the writing. A brain dump is exactly the
+   * thing written for twenty minutes without a thought about saving, so it
+   * cannot depend on remembering a button — not even the first time, when
+   * there is no blog yet. The first words written create the blog.
+   *
+   * Metadata — slug, status, series — is deliberately not autosaved: those are
+   * decisions, and a half-made decision should not be written down.
+   */
+  const material = useMemo(
+    () => ({ braindump, draft_keywords: draftKeywords, twms, content }),
+    [braindump, draftKeywords, twms, content]
+  )
+  const debouncedMaterial = useDebounce(material, 1200)
+
+  // What is already in the database, so an unchanged article is never written.
+  const savedMaterial = useRef<string | null>(null)
+  const creating = useRef(false)
+
+  useEffect(() => {
+    const serialized = JSON.stringify(debouncedMaterial)
+    if (serialized === savedMaterial.current) return
+
+    // Nothing has been written yet, so there is nothing to create or save.
+    const written =
+      debouncedMaterial.braindump.trim() !== '' ||
+      debouncedMaterial.content.trim() !== '' ||
+      debouncedMaterial.draft_keywords.length > 0 ||
+      debouncedMaterial.twms.length > 0
+    if (!written) return
+
+    // One creation only; the effect runs again once the id arrives.
+    if (creating.current) return
+
+    let cancelled = false
+    setAutosave('saving')
+
+    const save = async () => {
+      if (blogId === null) {
+        creating.current = true
+        const response = await fetch('/api/blogs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            // The title may still be unwritten, so the draft gets a
+            // placeholder identity until the author decides on one.
+            title: title.trim() || 'Untitled',
+            slug: slug.trim() || `untitled-${Date.now()}`,
+            author_name: authorName.trim() || session?.user?.name || 'Unknown',
+            status: 'draft',
+            ...debouncedMaterial,
+            seo_metadata: {
+              metaTitle: seoTitle.trim() || title.trim() || 'Untitled',
+              metaDescription: seoDescription.trim(),
+              keywords: seoKeywords.trim(),
+            },
+          }),
+        })
+        creating.current = false
+        if (!response.ok) return false
+        const data = await response.json()
+        if (!cancelled) setBlogId(data.blog.id)
+        return true
+      }
+
+      const response = await fetch(`/api/blogs/${blogId}/material`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: serialized,
+      })
+      return response.ok
+    }
+
+    save()
+      .then(ok => {
+        if (cancelled) return
+        if (ok) {
+          savedMaterial.current = serialized
+          setAutosave('saved')
+        } else {
+          setAutosave('failed')
+        }
+      })
+      .catch(() => {
+        creating.current = false
+        if (!cancelled) setAutosave('failed')
+      })
+
+    return () => { cancelled = true }
+    // The metadata read above is only a starting point for the created row,
+    // so a change to it should not trigger a save on its own.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedMaterial, blogId])
 
   const handleSubmit = async (publishNow = false) => {
     // Validation
@@ -52,12 +162,13 @@ export default function CreateBlogPage() {
       alert('Please enter a slug')
       return
     }
-    if (!content.trim()) {
-      alert('Please enter content')
-      return
-    }
     if (!authorName.trim()) {
       alert('Please enter an author name')
+      return
+    }
+    const willPublish = publishNow || status === 'published'
+    if (willPublish && !canPublish(content, { isSeriesIndex: publishAsIndex })) {
+      alert('The final format is empty, so there is nothing to publish')
       return
     }
 
@@ -76,6 +187,9 @@ export default function CreateBlogPage() {
         series_id: seriesId,
         series_order: seriesOrder.trim() === '' ? null : parseInt(seriesOrder),
         is_series_index: seriesId !== null && isSeriesIndex,
+        braindump,
+        draft_keywords: draftKeywords,
+        twms,
         seo_metadata: {
           metaTitle: seoTitle.trim() || title.trim(),
           metaDescription: seoDescription.trim(),
@@ -84,14 +198,20 @@ export default function CreateBlogPage() {
         published_at: publishNow ? new Date().toISOString() : null,
       }
 
-      const response = await fetch('/api/blogs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(blogData),
-      })
+      const response = blogId === null
+        ? await fetch('/api/blogs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(blogData),
+          })
+        : await fetch(`/api/blogs/${blogId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(blogData),
+          })
 
       if (response.ok) {
-        const data = await response.json()
+        savedMaterial.current = JSON.stringify(material)
         router.push('/admin/blogs')
       } else {
         const error = await response.json()
@@ -104,6 +224,25 @@ export default function CreateBlogPage() {
       setLoading(false)
     }
   }
+
+  /**
+   * The twms become the final format. The twms are kept, so the finished
+   * piece still carries the thinking behind it.
+   */
+  const handleCompose = () => {
+    if (content.trim() !== '' && !confirm(
+      'This will replace the final format with the composed twms. Continue?'
+    )) {
+      return
+    }
+
+    setContent(composeDraft(twms))
+    setStage('final')
+  }
+
+  // Gates the Published option. The disabled option says enough on its own.
+  const publishAsIndex = seriesId !== null && isSeriesIndex
+  const publishable = canPublish(content, { isSeriesIndex: publishAsIndex })
 
   return (
     <div className="admin-content-wide">
@@ -135,7 +274,7 @@ export default function CreateBlogPage() {
             <label className="form-label">
               Slug <span className="form-required">*</span>
             </label>
-            <SlugInput title={title} value={slug} onChange={setSlug} />
+            <SlugInput title={title} value={slug} onChange={setSlug} excludeId={blogId ?? undefined} />
           </div>
 
           {/* Excerpt */}
@@ -152,13 +291,38 @@ export default function CreateBlogPage() {
             <p className="form-hint">{excerpt.length}/500 characters</p>
           </div>
 
-          {/* Content */}
-          <div>
-            <label className="form-label">
-              Content <span className="form-required">*</span>
-            </label>
-            <TipTapEditor content={content} onChange={setContent} />
+          {/* The four stages */}
+          <div className="stage-bar">
+            <StageTabs stage={stage} onChange={setStage} />
+            {autosave !== 'idle' && (
+              <span className={'autosave' + (autosave === 'failed' ? ' failed' : '')}>
+                {autosave === 'saving' ? 'Saving' : autosave === 'saved' ? 'Saved' : 'Not saved'}
+              </span>
+            )}
           </div>
+
+          {stage === 'braindump' && (
+            <BrainDumpPanel value={braindump} onChange={setBraindump} />
+          )}
+
+          {stage === 'keywords' && (
+            <DraftKeywordsPanel keywords={draftKeywords} onChange={setDraftKeywords} />
+          )}
+
+          {stage === 'twm' && (
+            <TwmPanel
+              twms={twms}
+              keywords={draftKeywords}
+              onChange={setTwms}
+              onCompose={handleCompose}
+            />
+          )}
+
+          {/* TipTap is mounted only on the final format, so the other stages
+              carry no rich-text machinery at all. */}
+          {stage === 'final' && (
+            <TipTapEditor content={content} onChange={setContent} />
+          )}
 
           {/* SEO Settings */}
           <div className="seo-section">
@@ -201,7 +365,7 @@ export default function CreateBlogPage() {
                   />
                 </div>
                 <div>
-                  <label className="seo-label">Keywords</label>
+                  <label className="seo-label">SEO Keywords</label>
                   <input
                     type="text"
                     value={seoKeywords}
@@ -227,7 +391,9 @@ export default function CreateBlogPage() {
                 className="form-input"
               >
                 <option value="draft">Draft</option>
-                <option value="published">Published</option>
+                <option value="published" disabled={!publishable}>
+                  Published
+                </option>
               </select>
             </div>
 
@@ -254,7 +420,7 @@ export default function CreateBlogPage() {
               </button>
               <button
                 onClick={() => handleSubmit(true)}
-                disabled={loading}
+                disabled={loading || !publishable}
                 className="btn btn-primary btn-full"
               >
                 {loading ? 'Publishing...' : 'Publish Now'}
