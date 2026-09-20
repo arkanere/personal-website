@@ -1,10 +1,5 @@
 'use client'
 
-/**
- * Create Blog Page
- * Form to create a new blog post
- */
-
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'

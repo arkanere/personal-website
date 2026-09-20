@@ -1,19 +1,10 @@
 /**
- * Writing Stages
- *
- * An article is written in four stages — a brain dump, the keywords pulled out
- * of it, the twms built from those keywords, and the final format — and each
- * keeps its own field on the article.
- *
- * Nothing records which stage an article is "at". They are places to work,
- * moved between freely, so there is nothing to record.
- *
- * Publishing has one requirement: a non-empty final format.
+ * Writing stages: brain dump, draft keywords, twms, final format. Each keeps
+ * its own field on the article; nothing records which stage an article is at.
  */
 
 import { Twm } from '@/lib/types/blog'
 
-/** The whole point of the primitive: a twm is at most twenty words. */
 export const TWM_MAX_WORDS = 20
 
 export function countWords(text: string): number {
@@ -22,7 +13,7 @@ export function countWords(text: string): number {
   return trimmed.split(/\s+/).length
 }
 
-/** Returns an error message, or null when the twm is within its budget. */
+/** Returns an error message, or null when valid. */
 export function validateTwm(text: string): string | null {
   const words = countWords(text)
   if (words > TWM_MAX_WORDS) {
@@ -48,10 +39,7 @@ export function normalizeTwms(raw: unknown): Twm[] {
     }))
 }
 
-/**
- * The concepts pulled out of a brain dump. Not the SEO keywords, which are
- * metadata for search engines and live in seo_metadata.
- */
+/** Draft keywords, not the SEO keywords in seo_metadata. */
 export function normalizeDraftKeywords(raw: unknown): string[] {
   if (!Array.isArray(raw)) return []
 
@@ -62,9 +50,8 @@ export function normalizeDraftKeywords(raw: unknown): string[] {
 }
 
 /**
- * An editor's idea of empty is not an empty string: TipTap leaves "<p></p>"
- * behind, so emptiness has to be judged after the markup is stripped. Embedded
- * media counts as content even though it strips to nothing.
+ * TipTap leaves "<p></p>" behind, so emptiness is judged after stripping
+ * markup. Embedded media counts as content even though it strips to nothing.
  */
 const EMBED = /<(img|iframe|video|audio)\b/i
 
@@ -76,12 +63,7 @@ export function isBlank(html: string): boolean {
     .trim() === ''
 }
 
-/**
- * You publish what is in the final format, so there has to be something in it.
- *
- * A series index article is the exception: it exists to stand for its series on
- * the home page, and several are deliberately blank.
- */
+/** Series index articles are exempt: they are deliberately blank. */
 export function canPublish(
   content: string,
   options: { isSeriesIndex?: boolean } = {}
@@ -90,7 +72,6 @@ export function canPublish(
   return !isBlank(content)
 }
 
-/** 3-5 twms make a paragraph, per the twm architecture. */
 const TWMS_PER_PARAGRAPH = 4
 
 function escapeHtml(text: string): string {
@@ -100,7 +81,6 @@ function escapeHtml(text: string): string {
     .replace(/>/g, '&gt;')
 }
 
-/** Compose the twms into the final format. */
 export function composeDraft(twms: Twm[]): string {
   const texts = twms.map(t => t.text.trim()).filter(t => t !== '')
   if (texts.length === 0) return ''

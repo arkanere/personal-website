@@ -1,11 +1,6 @@
 'use client'
 
-/**
- * Admin Blog List Page
- * Displays all blogs with search, filter, and management capabilities.
- * Articles are either independent or part of a series; series members are
- * grouped under their series, with the index article marked.
- */
+/** Series members are grouped under their series, with the index marked. */
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'

@@ -1,6 +1,4 @@
-/**
- * Middleware to protect admin routes
- */
+/** Protects admin routes. */
 
 import { withAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'

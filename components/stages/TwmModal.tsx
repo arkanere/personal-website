@@ -1,19 +1,12 @@
 'use client'
 
-/**
- * TWM Modal
- *
- * One twm, filling the screen, at 40px. The size is the point: twenty words
- * is all that fits comfortably, so the constraint is felt rather than counted.
- *
- * Configs taken from the twm prototype (20wordsmax/ui.html).
- */
+/** Full-screen editor for one twm. Styles from 20wordsmax/ui.html. */
 
 import { useEffect, useRef, useState } from 'react'
 import { TWM_MAX_WORDS, countWords } from '@/lib/lifecycle'
 
 interface TwmModalProps {
-  /** The text being edited, or '' when adding a new twm. */
+  /** '' when adding a new twm. */
   initialText: string
   onSave: (text: string) => void
   onCancel: () => void

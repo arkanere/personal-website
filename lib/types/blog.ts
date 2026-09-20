@@ -1,7 +1,3 @@
-/**
- * Blog Types and Interfaces
- */
-
 export type BlogStatus = 'draft' | 'published' | 'archived'
 
 /** A twenty-words-max unit: the smallest unit of complete meaning. */
@@ -27,11 +23,7 @@ export interface SEOMetadata {
   keywords: string
 }
 
-/**
- * A series groups several articles together. One of its members is designated
- * the index article (index_blog_id) — that is the article listed on the home
- * page on the series' behalf. It is an ordinary article, written by hand.
- */
+/** index_blog_id is the member article listed on the home page for the series. */
 export interface Series {
   id: number
   title: string

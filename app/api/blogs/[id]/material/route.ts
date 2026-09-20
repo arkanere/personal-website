@@ -2,9 +2,8 @@
  * Writing Material API
  * PATCH /api/blogs/[id]/material - Save the writing, and nothing else
  *
- * Autosave writes through here rather than through the ordinary update route,
- * so that saving in the background can never touch the slug, the status, the
- * series or anything else the author has not finished deciding.
+ * Separate from the update route so autosave can never touch the slug,
+ * status, series or anything else the author has not finished deciding.
  */
 
 import { NextRequest, NextResponse } from 'next/server'

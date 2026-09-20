@@ -1,10 +1,5 @@
 'use client'
 
-/**
- * Admin Layout
- * Layout for all admin pages with navigation and authentication
- */
-
 import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'

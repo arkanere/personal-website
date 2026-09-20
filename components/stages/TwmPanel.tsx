@@ -1,12 +1,6 @@
 'use client'
 
-/**
- * TWM Panel
- *
- * Twenty words max, per unit. The counter is not a suggestion: the ceiling is
- * the primitive, and an over-long twm blocks the move to the final stage the
- * same way the API blocks it on save.
- */
+/** An over-long twm blocks the final stage, as the API blocks it on save. */
 
 import { useState } from 'react'
 import { Twm } from '@/lib/types/blog'

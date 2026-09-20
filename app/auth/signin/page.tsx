@@ -1,9 +1,5 @@
 'use client'
 
-/**
- * Sign In Page
- */
-
 import { Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'

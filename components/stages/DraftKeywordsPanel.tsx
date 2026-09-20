@@ -1,13 +1,6 @@
 'use client'
 
-/**
- * Draft Keywords Panel
- *
- * The concepts pulled out of a brain dump, which go on to seed the twms.
- * Not the SEO keywords: those describe the finished article to a search engine.
- *
- * Laid out like the twm prototype's primitives: a + to add, and the list below.
- */
+/** Draft keywords, not the SEO keywords in seo_metadata. */
 
 import { useState } from 'react'
 import KeywordModal from './KeywordModal'

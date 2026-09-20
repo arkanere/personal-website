@@ -1,6 +1,4 @@
-/**
- * Series helpers shared by the blog create/update routes.
- */
+/** Series helpers shared by the blog create/update routes. */
 
 import { sql } from '@vercel/postgres'
 

@@ -1,11 +1,6 @@
 'use client'
 
-/**
- * Stage Tabs
- *
- * The four stages of writing an article. Any of them can be opened at any
- * time: they are places to work, not steps to be unlocked.
- */
+/** The four writing stages. Any of them can be opened at any time. */
 
 export type WritingStage = 'braindump' | 'keywords' | 'twm' | 'final'
 

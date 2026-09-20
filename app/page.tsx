@@ -14,11 +14,7 @@ interface HomeListItem {
   post_count: number
 }
 
-/**
- * The home page lists standalone articles alongside one article per series:
- * the index article the series designates. The rest of a series' articles are
- * reachable from that index rather than listed here.
- */
+/** Standalone articles, plus each series' index article. */
 async function getHomePosts(): Promise<HomeListItem[]> {
   try {
     const { rows } = await sql`

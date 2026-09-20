@@ -1,11 +1,6 @@
 'use client'
 
-/**
- * Keyword Modal
- *
- * The same modal as a twm, with no word ceiling: a keyword is a concept, not
- * a sentence, so there is nothing to cap.
- */
+/** Like TwmModal, but with no word limit. */
 
 import { useEffect, useRef, useState } from 'react'
 

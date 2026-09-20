@@ -1,12 +1,5 @@
 'use client'
 
-/**
- * Brain Dump Panel
- *
- * One plain textarea and nothing else. Formatting at this stage is
- * procrastination with a toolbar, and so is anything else on the screen.
- */
-
 import { countWords } from '@/lib/lifecycle'
 
 interface BrainDumpPanelProps {

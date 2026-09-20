@@ -1,10 +1,5 @@
 'use client'
 
-/**
- * Edit Blog Page
- * Form to edit an existing blog post
- */
-
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'

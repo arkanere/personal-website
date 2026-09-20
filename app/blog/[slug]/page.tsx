@@ -26,11 +26,7 @@ async function getBlogBySlug(slug: string): Promise<Blog | null> {
   }
 }
 
-/**
- * The other published articles in this post's series, in reading order, so a
- * reader can move through the series from any part of it. The index article is
- * included, so the list reads as a complete table of contents.
- */
+/** The series' published articles in reading order, index article included. */
 async function getSeriesContext(seriesId: number | null): Promise<SeriesContext | null> {
   if (!seriesId) return null
 
