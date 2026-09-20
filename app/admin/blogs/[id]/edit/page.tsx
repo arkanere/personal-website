@@ -369,11 +369,7 @@ export default function EditBlogPage() {
           )}
 
           {stage === 'keywords' && (
-            <DraftKeywordsPanel
-              keywords={draftKeywords}
-              braindump={braindump}
-              onChange={setDraftKeywords}
-            />
+            <DraftKeywordsPanel keywords={draftKeywords} onChange={setDraftKeywords} />
           )}
 
           {stage === 'twm' && (
