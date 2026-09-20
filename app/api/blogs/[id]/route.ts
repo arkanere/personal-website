@@ -51,12 +51,14 @@ export async function PATCH(
     }
 
     const content = body.content || ''
+    const seriesIdForGuard = parseSeriesId(body.series_id)
     const braindump = body.braindump || ''
     const keywords = normalizeKeywords(body.keywords)
     const twms = normalizeTwms(body.twms)
 
     // You publish what is in the final format.
-    if (body.status === 'published' && !canPublish(content)) {
+    const isSeriesIndex = seriesIdForGuard !== null && Boolean(body.is_series_index)
+    if (body.status === 'published' && !canPublish(content, { isSeriesIndex })) {
       return NextResponse.json(
         { error: 'The final format is empty, so there is nothing to publish' },
         { status: 422 }

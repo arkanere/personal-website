@@ -34,10 +34,21 @@ assert.deepEqual(normalizeKeywords(['a', '', '  b  ', 7]), ['a', 'b'])
 assert.deepEqual(normalizeTwms(undefined), [])
 assert.deepEqual(normalizeTwms([{ text: 'x' }, null]), [{ id: 'twm-1', seed: null, text: 'x' }])
 
-// publishing needs a non-empty final format, and nothing else
+// publishing needs a non-empty final format, and nothing else.
+// An editor's empty is not an empty string, which is what let a blank article
+// be published: TipTap leaves a bare paragraph behind.
 assert.equal(canPublish(''), false)
 assert.equal(canPublish('   '), false)
+assert.equal(canPublish('<p></p>'), false)
+assert.equal(canPublish('<p><br></p>'), false)
+assert.equal(canPublish('<p>&nbsp;</p>'), false)
+assert.equal(canPublish('<p> </p>\n<p></p>'), false)
 assert.equal(canPublish('<p>x</p>'), true)
+// media strips to nothing but is still an article
+assert.equal(canPublish('<p><img src="a.png"></p>'), true)
+// a series index stands for its series on the home page and may be blank
+assert.equal(canPublish('<p></p>', { isSeriesIndex: true }), true)
+assert.equal(canPublish('<p></p>', { isSeriesIndex: false }), false)
 
 // composeDraft: 4 twms per paragraph, html-escaped
 assert.equal(composeDraft([]), '')

@@ -37,7 +37,8 @@ export async function POST(request: NextRequest) {
     const twms = normalizeTwms(body.twms)
 
     // You publish what is in the final format.
-    if (status === 'published' && !canPublish(content)) {
+    const isSeriesIndex = Boolean(body.is_series_index)
+    if (status === 'published' && !canPublish(content, { isSeriesIndex })) {
       return NextResponse.json(
         { error: 'The final format is empty, so there is nothing to publish' },
         { status: 422 }

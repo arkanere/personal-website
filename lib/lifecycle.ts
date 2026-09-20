@@ -57,9 +57,33 @@ export function normalizeKeywords(raw: unknown): string[] {
     .filter(k => k !== '')
 }
 
-/** You publish what is in the final format, so there has to be something in it. */
-export function canPublish(content: string): boolean {
-  return content.trim() !== ''
+/**
+ * An editor's idea of empty is not an empty string: TipTap leaves "<p></p>"
+ * behind, so emptiness has to be judged after the markup is stripped. Embedded
+ * media counts as content even though it strips to nothing.
+ */
+const EMBED = /<(img|iframe|video|audio)\b/i
+
+export function isBlank(html: string): boolean {
+  if (EMBED.test(html)) return false
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;|&#160;/gi, ' ')
+    .trim() === ''
+}
+
+/**
+ * You publish what is in the final format, so there has to be something in it.
+ *
+ * A series index article is the exception: it exists to stand for its series on
+ * the home page, and several are deliberately blank.
+ */
+export function canPublish(
+  content: string,
+  options: { isSeriesIndex?: boolean } = {}
+): boolean {
+  if (options.isSeriesIndex) return true
+  return !isBlank(content)
 }
 
 /** 3-5 twms make a paragraph, per the twm architecture. */

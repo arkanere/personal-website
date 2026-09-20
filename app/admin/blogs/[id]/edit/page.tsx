@@ -114,7 +114,7 @@ export default function EditBlogPage() {
       alert('Please enter an author name')
       return
     }
-    if (status === 'published' && !canPublish(content)) {
+    if (status === 'published' && !canPublish(content, { isSeriesIndex: publishAsIndex })) {
       alert('The final format is empty, so there is nothing to publish')
       return
     }
@@ -202,7 +202,8 @@ export default function EditBlogPage() {
   }
 
   // Gates the Published option. The disabled option says enough on its own.
-  const publishable = canPublish(content)
+  const publishAsIndex = seriesId !== null && isSeriesIndex
+  const publishable = canPublish(content, { isSeriesIndex: publishAsIndex })
 
   if (loading) {
     return (
