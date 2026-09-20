@@ -20,7 +20,7 @@ export async function GET() {
       SELECT
         b.id, b.title, b.slug, b.excerpt, b.author_name, b.status,
         b.published_at, b.created_at, b.updated_at, b.view_count,
-        b.series_id, b.series_order,
+        b.series_id, b.series_order, b.stage,
         s.title AS series_title,
         s.slug AS series_slug,
         COALESCE(s.index_blog_id = b.id, false) AS is_series_index

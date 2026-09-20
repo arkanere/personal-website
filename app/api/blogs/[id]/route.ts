@@ -10,6 +10,7 @@ import { authOptions } from '@/lib/auth'
 import { sql } from '@vercel/postgres'
 import { UpdateBlogRequest } from '@/lib/types/blog'
 import { parseSeriesId, parseSeriesOrder, seriesExists, syncSeriesIndex } from '@/lib/series'
+import { isBlogStage, publishBlocker } from '@/lib/lifecycle'
 
 export async function PATCH(
   request: NextRequest,
@@ -31,21 +32,36 @@ export async function PATCH(
 
     const body: UpdateBlogRequest = await request.json()
 
-    // Validate required fields
-    if (!body.title || !body.slug || !body.content || !body.author_name) {
+    // Content is only required at the final stage; before that the article
+    // lives in its workspace and has nothing composed yet.
+    if (!body.title || !body.slug || !body.author_name) {
       return NextResponse.json(
-        { error: 'Missing required fields: title, slug, content, author_name' },
+        { error: 'Missing required fields: title, slug, author_name' },
         { status: 400 }
       )
     }
 
     // Check if blog exists
     const { rows: existingBlog } = await sql`
-      SELECT id FROM personal_website_blogs WHERE id = ${blogId}
+      SELECT id, stage FROM personal_website_blogs WHERE id = ${blogId}
     `
 
     if (existingBlog.length === 0) {
       return NextResponse.json({ error: 'Blog not found' }, { status: 404 })
+    }
+
+    const content = body.content || ''
+
+    // This route does not move an article between stages — that is the job of
+    // PATCH /api/blogs/[id]/stage — so the stored stage wins over the body.
+    const stage = isBlogStage(existingBlog[0].stage) ? existingBlog[0].stage : 'final'
+
+    // Only a finished article can be published.
+    if (body.status === 'published') {
+      const blocker = publishBlocker({ stage, content })
+      if (blocker) {
+        return NextResponse.json({ error: blocker }, { status: 422 })
+      }
     }
 
     // Check if slug is taken by another blog
@@ -79,7 +95,7 @@ export async function PATCH(
       UPDATE personal_website_blogs SET
         title = ${body.title},
         slug = ${body.slug},
-        content = ${body.content},
+        content = ${content},
         excerpt = ${body.excerpt || null},
         featured_image = ${body.featured_image ? JSON.stringify(body.featured_image) : null}::jsonb,
         author_name = ${body.author_name},

@@ -9,6 +9,7 @@ import { authOptions } from '@/lib/auth'
 import { sql } from '@vercel/postgres'
 import { CreateBlogRequest } from '@/lib/types/blog'
 import { parseSeriesId, parseSeriesOrder, seriesExists, syncSeriesIndex } from '@/lib/series'
+import { isBlogStage, normalizeWorkspace, publishBlocker } from '@/lib/lifecycle'
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,12 +21,27 @@ export async function POST(request: NextRequest) {
 
     const body: CreateBlogRequest = await request.json()
 
-    // Validate required fields
-    if (!body.title || !body.slug || !body.content || !body.author_name) {
+    // An article captured as a brain dump has no content yet, so content is
+    // only required once it reaches the final stage (enforced below).
+    if (!body.title || !body.slug || !body.author_name) {
       return NextResponse.json(
-        { error: 'Missing required fields: title, slug, content, author_name' },
+        { error: 'Missing required fields: title, slug, author_name' },
         { status: 400 }
       )
+    }
+
+    // Callers that predate the lifecycle send no stage and mean 'final'.
+    const stage = isBlogStage(body.stage) ? body.stage : 'final'
+    const workspace = normalizeWorkspace(body.workspace)
+    const content = body.content || ''
+    const status = body.status || 'draft'
+
+    // Only a finished article can be published.
+    if (status === 'published') {
+      const blocker = publishBlocker({ stage, content })
+      if (blocker) {
+        return NextResponse.json({ error: blocker }, { status: 422 })
+      }
     }
 
     // Check if slug already exists
@@ -68,24 +84,28 @@ export async function POST(request: NextRequest) {
         categories,
         series_id,
         series_order,
+        stage,
+        workspace,
         seo_metadata,
         published_at
       ) VALUES (
         ${body.title},
         ${body.slug},
-        ${body.content},
+        ${content},
         ${body.excerpt || null},
         ${body.featured_image ? JSON.stringify(body.featured_image) : null}::jsonb,
         ${body.author_name},
-        ${body.status || 'draft'},
+        ${status},
         ${tagsArray}::text[],
         ${categoriesArray}::text[],
         ${seriesId},
         ${seriesOrder},
+        ${stage},
+        ${JSON.stringify(workspace)}::jsonb,
         ${JSON.stringify(body.seo_metadata)}::jsonb,
         ${body.published_at ? new Date(body.published_at).toISOString() : null}
       )
-      RETURNING id, title, slug, status
+      RETURNING id, title, slug, status, stage
     `
 
     await syncSeriesIndex(rows[0].id, seriesId, Boolean(body.is_series_index))
