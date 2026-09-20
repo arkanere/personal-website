@@ -9,7 +9,7 @@ import { authOptions } from '@/lib/auth'
 import { sql } from '@vercel/postgres'
 import { CreateBlogRequest } from '@/lib/types/blog'
 import { parseSeriesId, parseSeriesOrder, seriesExists, syncSeriesIndex } from '@/lib/series'
-import { canPublish, normalizeKeywords, normalizeTwms, validateTwm } from '@/lib/lifecycle'
+import { canPublish, normalizeDraftKeywords, normalizeTwms, validateTwm } from '@/lib/lifecycle'
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const content = body.content || ''
     const status = body.status || 'draft'
     const braindump = body.braindump || ''
-    const keywords = normalizeKeywords(body.keywords)
+    const draftKeywords = normalizeDraftKeywords(body.draft_keywords)
     const twms = normalizeTwms(body.twms)
 
     // You publish what is in the final format.
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         series_id,
         series_order,
         braindump,
-        keywords,
+        draft_keywords,
         twms,
         seo_metadata,
         published_at
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
         ${seriesId},
         ${seriesOrder},
         ${braindump},
-        ${`{${keywords.join(',')}}`}::text[],
+        ${`{${draftKeywords.join(',')}}`}::text[],
         ${JSON.stringify(twms)}::jsonb,
         ${JSON.stringify(body.seo_metadata)}::jsonb,
         ${body.published_at ? new Date(body.published_at).toISOString() : null}

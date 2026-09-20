@@ -48,7 +48,11 @@ export function normalizeTwms(raw: unknown): Twm[] {
     }))
 }
 
-export function normalizeKeywords(raw: unknown): string[] {
+/**
+ * The concepts pulled out of a brain dump. Not the SEO keywords, which are
+ * metadata for search engines and live in seo_metadata.
+ */
+export function normalizeDraftKeywords(raw: unknown): string[] {
   if (!Array.isArray(raw)) return []
 
   return raw

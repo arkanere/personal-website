@@ -679,7 +679,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
-  border-bottom: 1px solid #e5e7eb;
 }
 
 .stage-tab {
@@ -697,6 +696,7 @@
 .stage-tab.current {
   color: #1d4ed8;
   border-bottom-color: #2563eb;
+  margin-bottom: -1px;
 }
 
 /* Writing stages: panels */
@@ -881,3 +881,20 @@
   color: #b91c1c;
 }
 
+
+.stage-bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.autosave {
+  padding-bottom: 0.5rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.autosave.failed { color: #b91c1c; }

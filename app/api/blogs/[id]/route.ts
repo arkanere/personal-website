@@ -10,7 +10,7 @@ import { authOptions } from '@/lib/auth'
 import { sql } from '@vercel/postgres'
 import { UpdateBlogRequest } from '@/lib/types/blog'
 import { parseSeriesId, parseSeriesOrder, seriesExists, syncSeriesIndex } from '@/lib/series'
-import { canPublish, normalizeKeywords, normalizeTwms, validateTwm } from '@/lib/lifecycle'
+import { canPublish, normalizeDraftKeywords, normalizeTwms, validateTwm } from '@/lib/lifecycle'
 
 export async function PATCH(
   request: NextRequest,
@@ -53,7 +53,7 @@ export async function PATCH(
     const content = body.content || ''
     const seriesIdForGuard = parseSeriesId(body.series_id)
     const braindump = body.braindump || ''
-    const keywords = normalizeKeywords(body.keywords)
+    const draftKeywords = normalizeDraftKeywords(body.draft_keywords)
     const twms = normalizeTwms(body.twms)
 
     // You publish what is in the final format.
@@ -111,7 +111,7 @@ export async function PATCH(
         series_id = ${seriesId},
         series_order = ${seriesOrder},
         braindump = ${braindump},
-        keywords = ${`{${keywords.join(',')}}`}::text[],
+        draft_keywords = ${`{${draftKeywords.join(',')}}`}::text[],
         twms = ${JSON.stringify(twms)}::jsonb,
         seo_metadata = ${JSON.stringify(body.seo_metadata)}::jsonb,
         published_at = ${body.published_at ? new Date(body.published_at).toISOString() : null}

@@ -23,6 +23,7 @@ export interface FeaturedImage {
 export interface SEOMetadata {
   metaTitle: string
   metaDescription: string
+  /** Search-engine keywords. Not the draft keywords of the writing stages. */
   keywords: string
 }
 
@@ -76,7 +77,8 @@ export interface Blog {
   series_id: number | null
   series_order: number | null
   braindump: string
-  keywords: string[]
+  /** The concepts pulled out of the brain dump. Not seo_metadata.keywords. */
+  draft_keywords: string[]
   twms: Twm[]
   published_at: Date | null
   view_count: number
@@ -133,7 +135,7 @@ export interface CreateBlogRequest {
   /** When true, the series named by series_id adopts this article as its index. */
   is_series_index?: boolean
   braindump?: string
-  keywords?: string[]
+  draft_keywords?: string[]
   twms?: Twm[]
   seo_metadata: SEOMetadata
   published_at?: Date | null

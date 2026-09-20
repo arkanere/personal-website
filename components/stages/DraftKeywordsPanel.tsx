@@ -1,16 +1,19 @@
 'use client'
 
 /**
- * Keywords Panel
+ * Draft Keywords Panel
  *
  * The second pass over a brain dump: what is this actually about? The extract
  * button offers the most frequent words as a starting point, but the list is
  * edited by hand — picking the words is the thinking, not the counting.
+ *
+ * These are not the SEO keywords. These seed the twms; those describe the
+ * finished article to a search engine.
  */
 
 import { useState } from 'react'
 
-interface KeywordsPanelProps {
+interface DraftKeywordsPanelProps {
   keywords: string[]
   braindump: string
   onChange: (keywords: string[]) => void
@@ -30,7 +33,7 @@ const STOPWORDS = new Set([
   'she', 'him', 'had', 'get', 'got', 'one', 'two', 'way', 'own', 'too', 'any',
 ])
 
-function suggestKeywords(text: string, existing: string[], limit = 12): string[] {
+function suggestDraftKeywords(text: string, existing: string[], limit = 12): string[] {
   const seen = new Set(existing.map(k => k.toLowerCase()))
   const counts = new Map<string, number>()
 
@@ -51,7 +54,11 @@ function suggestKeywords(text: string, existing: string[], limit = 12): string[]
     .map(([word]) => word)
 }
 
-export default function KeywordsPanel({ keywords, braindump, onChange }: KeywordsPanelProps) {
+export default function DraftKeywordsPanel({
+  keywords,
+  braindump,
+  onChange,
+}: DraftKeywordsPanelProps) {
   const [draft, setDraft] = useState('')
   const [suggestions, setSuggestions] = useState<string[] | null>(null)
 
@@ -111,7 +118,7 @@ export default function KeywordsPanel({ keywords, braindump, onChange }: Keyword
       <div className="stage-panel-actions">
         <button
           type="button"
-          onClick={() => setSuggestions(suggestKeywords(braindump, keywords))}
+          onClick={() => setSuggestions(suggestDraftKeywords(braindump, keywords))}
           className="btn btn-secondary"
           disabled={braindump.trim() === ''}
         >

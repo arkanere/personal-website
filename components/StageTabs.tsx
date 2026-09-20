@@ -11,7 +11,7 @@ export type WritingStage = 'braindump' | 'keywords' | 'twm' | 'final'
 
 export const WRITING_STAGES: { id: WritingStage; label: string }[] = [
   { id: 'braindump', label: 'Brain Dump' },
-  { id: 'keywords', label: 'Keywords' },
+  { id: 'keywords', label: 'Draft Keywords' },
   { id: 'twm', label: '20 Words Max' },
   { id: 'final', label: 'Final Format' },
 ]

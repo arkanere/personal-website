@@ -11,7 +11,7 @@
 import assert from 'node:assert/strict'
 import {
   countWords, validateTwm, canPublish, composeDraft,
-  normalizeTwms, normalizeKeywords, TWM_MAX_WORDS,
+  normalizeTwms, normalizeDraftKeywords, TWM_MAX_WORDS,
 } from '@/lib/lifecycle'
 
 // countWords matches twm's CLI behaviour, but returns 0 for empty
@@ -28,9 +28,9 @@ assert.equal(validateTwm('  '), null)
 assert.equal(TWM_MAX_WORDS, 20)
 
 // normalizers survive junk, which is the whole reason they exist
-assert.deepEqual(normalizeKeywords(undefined), [])
-assert.deepEqual(normalizeKeywords('nonsense'), [])
-assert.deepEqual(normalizeKeywords(['a', '', '  b  ', 7]), ['a', 'b'])
+assert.deepEqual(normalizeDraftKeywords(undefined), [])
+assert.deepEqual(normalizeDraftKeywords('nonsense'), [])
+assert.deepEqual(normalizeDraftKeywords(['a', '', '  b  ', 7]), ['a', 'b'])
 assert.deepEqual(normalizeTwms(undefined), [])
 assert.deepEqual(normalizeTwms([{ text: 'x' }, null]), [{ id: 'twm-1', seed: null, text: 'x' }])
 

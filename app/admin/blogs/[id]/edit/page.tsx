@@ -5,7 +5,7 @@
  * Form to edit an existing blog post
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import TipTapEditor from '@/components/TipTapEditor'
@@ -14,10 +14,11 @@ import SeriesPicker from '@/components/SeriesPicker'
 import StatusBadge from '@/components/StatusBadge'
 import StageTabs, { WritingStage } from '@/components/StageTabs'
 import BrainDumpPanel from '@/components/stages/BrainDumpPanel'
-import KeywordsPanel from '@/components/stages/KeywordsPanel'
+import DraftKeywordsPanel from '@/components/stages/DraftKeywordsPanel'
 import TwmPanel from '@/components/stages/TwmPanel'
 import { Blog, BlogStatus, Twm } from '@/lib/types/blog'
-import { canPublish, composeDraft, normalizeKeywords, normalizeTwms } from '@/lib/lifecycle'
+import { canPublish, composeDraft, normalizeDraftKeywords, normalizeTwms } from '@/lib/lifecycle'
+import { useDebounce } from '@/lib/hooks/useDebounce'
 import Link from 'next/link'
 
 export default function EditBlogPage() {
@@ -54,8 +55,9 @@ export default function EditBlogPage() {
   // The four stages. Which one is open is a view, not something to store.
   const [stage, setStage] = useState<WritingStage>('final')
   const [braindump, setBraindump] = useState('')
-  const [keywords, setKeywords] = useState<string[]>([])
+  const [draftKeywords, setDraftKeywords] = useState<string[]>([])
   const [twms, setTwms] = useState<Twm[]>([])
+  const [autosave, setAutosave] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle')
 
   // Fetch blog data
   useEffect(() => {
@@ -86,8 +88,14 @@ export default function EditBlogPage() {
         setSeoDescription(blog.seo_metadata.metaDescription)
         setSeoKeywords(blog.seo_metadata.keywords)
         setBraindump(blog.braindump || '')
-        setKeywords(normalizeKeywords(blog.keywords))
+        setDraftKeywords(normalizeDraftKeywords(blog.draft_keywords))
         setTwms(normalizeTwms(blog.twms))
+        savedMaterial.current = JSON.stringify({
+          braindump: blog.braindump || '',
+          draft_keywords: normalizeDraftKeywords(blog.draft_keywords),
+          twms: normalizeTwms(blog.twms),
+          content: blog.content,
+        })
       } else {
         alert('Failed to load blog')
         router.push('/admin/blogs')
@@ -99,6 +107,53 @@ export default function EditBlogPage() {
       setLoading(false)
     }
   }
+
+  /**
+   * Autosave the writing, and only the writing. A brain dump is exactly the
+   * thing written for twenty minutes without a thought about saving, so it
+   * cannot depend on remembering a button.
+   *
+   * Metadata — slug, status, series — is deliberately not autosaved: those are
+   * decisions, and a half-made decision should not be written down.
+   */
+  const material = useMemo(
+    () => ({ braindump, draft_keywords: draftKeywords, twms, content }),
+    [braindump, draftKeywords, twms, content]
+  )
+  const debouncedMaterial = useDebounce(material, 1200)
+
+  // What is already in the database, so an unchanged article is never written.
+  const savedMaterial = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (loading || savedMaterial.current === null) return
+
+    const serialized = JSON.stringify(debouncedMaterial)
+    if (serialized === savedMaterial.current) return
+
+    let cancelled = false
+    setAutosave('saving')
+
+    fetch(`/api/blogs/${blogId}/material`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: serialized,
+    })
+      .then(response => {
+        if (cancelled) return
+        if (response.ok) {
+          savedMaterial.current = serialized
+          setAutosave('saved')
+        } else {
+          setAutosave('failed')
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setAutosave('failed')
+      })
+
+    return () => { cancelled = true }
+  }, [debouncedMaterial, loading, blogId])
 
   const handleSubmit = async () => {
     // Validation
@@ -135,7 +190,7 @@ export default function EditBlogPage() {
         series_order: seriesOrder.trim() === '' ? null : parseInt(seriesOrder),
         is_series_index: seriesId !== null && isSeriesIndex,
         braindump,
-        keywords,
+        draft_keywords: draftKeywords,
         twms,
         seo_metadata: {
           metaTitle: seoTitle.trim() || title.trim(),
@@ -154,6 +209,7 @@ export default function EditBlogPage() {
       })
 
       if (response.ok) {
+        savedMaterial.current = JSON.stringify(material)
         router.push('/admin/blogs')
       } else {
         const error = await response.json()
@@ -299,24 +355,31 @@ export default function EditBlogPage() {
           </div>
 
           {/* The four stages */}
-          <StageTabs stage={stage} onChange={setStage} />
+          <div className="stage-bar">
+            <StageTabs stage={stage} onChange={setStage} />
+            {autosave !== 'idle' && (
+              <span className={'autosave' + (autosave === 'failed' ? ' failed' : '')}>
+                {autosave === 'saving' ? 'Saving' : autosave === 'saved' ? 'Saved' : 'Not saved'}
+              </span>
+            )}
+          </div>
 
           {stage === 'braindump' && (
             <BrainDumpPanel value={braindump} onChange={setBraindump} />
           )}
 
           {stage === 'keywords' && (
-            <KeywordsPanel
-              keywords={keywords}
+            <DraftKeywordsPanel
+              keywords={draftKeywords}
               braindump={braindump}
-              onChange={setKeywords}
+              onChange={setDraftKeywords}
             />
           )}
 
           {stage === 'twm' && (
             <TwmPanel
               twms={twms}
-              keywords={keywords}
+              keywords={draftKeywords}
               onChange={setTwms}
               onCompose={handleCompose}
             />
@@ -369,7 +432,7 @@ export default function EditBlogPage() {
                   />
                 </div>
                 <div>
-                  <label className="seo-label">Keywords</label>
+                  <label className="seo-label">SEO Keywords</label>
                   <input
                     type="text"
                     value={seoKeywords}
