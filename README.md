@@ -108,4 +108,4 @@ Both checks run together with `npm run check`.
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
