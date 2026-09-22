@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     if (existingBlogs.length > 0) {
       return NextResponse.json(
-        { error: 'A blog with this slug already exists' },
+        { error: 'A piece with this slug already exists' },
         { status: 409 }
       )
     }
@@ -122,13 +122,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       blog: rows[0],
-      message: 'Blog created successfully',
+      message: 'Piece created successfully',
     }, { status: 201 })
 
   } catch (error) {
     console.error('Error creating blog:', error)
     return NextResponse.json(
-      { error: 'Failed to create blog post' },
+      { error: 'Failed to create piece' },
       { status: 500 }
     )
   }

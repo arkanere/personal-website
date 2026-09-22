@@ -223,7 +223,7 @@ export default function SeriesManager({ onSeriesChanged }: SeriesManagerProps) {
             <div className="empty-state">Loading series...</div>
           ) : series.length === 0 ? (
             <div className="empty-state">
-              No series yet. Create one, then assign articles to it from the blog editor.
+              No series yet. Create one, then assign articles to it from the piece editor.
             </div>
           ) : (
             <div className="table-wrapper">

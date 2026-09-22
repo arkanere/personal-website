@@ -35,7 +35,7 @@ export async function PATCH(
     const blogId = parseInt(id)
 
     if (isNaN(blogId)) {
-      return NextResponse.json({ error: 'Invalid blog ID' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid piece ID' }, { status: 400 })
     }
 
     const body: MaterialRequest = await request.json()
@@ -48,7 +48,7 @@ export async function PATCH(
     `
 
     if (existing.length === 0) {
-      return NextResponse.json({ error: 'Blog not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Piece not found' }, { status: 404 })
     }
 
     const braindump = body.braindump || ''

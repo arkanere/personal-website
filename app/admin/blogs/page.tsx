@@ -113,11 +113,11 @@ export default function AdminBlogsPage() {
       if (response.ok) {
         setBlogs(blogs.filter(blog => blog.id !== id))
       } else {
-        alert('Failed to delete blog')
+        alert('Failed to delete piece')
       }
     } catch (error) {
       console.error('Error deleting blog:', error)
-      alert('An error occurred while deleting the blog')
+      alert('An error occurred while deleting the piece')
     }
   }
 
@@ -265,16 +265,16 @@ export default function AdminBlogsPage() {
     <div className="stack">
       {/* Header */}
       <div className="flex-between">
-        <h1 className="admin-page-title">Blog Management</h1>
+        <h1 className="admin-page-title">Piece Management</h1>
         <Link href="/admin/blogs/create" className="btn btn-primary">
-          Create New Blog
+          Create New Piece
         </Link>
       </div>
 
       {/* Statistics Cards */}
       <div className="grid-4">
         <div className="card">
-          <p className="stat-label">Total Blogs</p>
+          <p className="stat-label">Total Pieces</p>
           <p className="stat-value">{stats.total}</p>
         </div>
         <div className="card">
@@ -398,12 +398,12 @@ export default function AdminBlogsPage() {
       {/* Blog List */}
       <div className="table-card">
         {loading ? (
-          <div className="empty-state">Loading blogs...</div>
+          <div className="empty-state">Loading pieces...</div>
         ) : filteredBlogs.length === 0 ? (
           <div className="empty-state">
             {searchQuery || statusFilter !== 'all' || seriesFilter !== 'all' || selectedTags.length > 0
-              ? 'No blogs match your filters'
-              : 'No blogs yet. Create your first blog!'}
+              ? 'No pieces match your filters'
+              : 'No pieces yet. Create your first piece!'}
           </div>
         ) : (
           <div className="table-wrapper">

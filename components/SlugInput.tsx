@@ -91,7 +91,7 @@ export default function SlugInput({ title, value, onChange, excludeId }: SlugInp
           value={value}
           onChange={handleChange}
           className="form-input"
-          placeholder="my-blog-post-slug"
+          placeholder="my-piece-slug"
         />
         {validationState === 'checking' && (
           <div className="slug-icon slug-spinner">

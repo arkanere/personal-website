@@ -33,7 +33,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching blogs:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch blogs' },
+      { error: 'Failed to fetch pieces' },
       { status: 500 }
     )
   }

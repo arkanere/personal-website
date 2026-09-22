@@ -23,7 +23,7 @@ export async function GET(
     const blogId = parseInt(id)
 
     if (isNaN(blogId)) {
-      return NextResponse.json({ error: 'Invalid blog ID' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid piece ID' }, { status: 400 })
     }
 
     const { rows } = await sql`
@@ -38,14 +38,14 @@ export async function GET(
     `
 
     if (rows.length === 0) {
-      return NextResponse.json({ error: 'Blog not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Piece not found' }, { status: 404 })
     }
 
     return NextResponse.json({ blog: rows[0] })
   } catch (error) {
     console.error('Error fetching blog:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch blog' },
+      { error: 'Failed to fetch piece' },
       { status: 500 }
     )
   }

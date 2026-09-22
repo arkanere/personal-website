@@ -92,12 +92,12 @@ export default function EditBlogPage() {
           content: blog.content,
         })
       } else {
-        alert('Failed to load blog')
+        alert('Failed to load piece')
         router.push('/admin/blogs')
       }
     } catch (error) {
       console.error('Error fetching blog:', error)
-      alert('An error occurred while loading the blog')
+      alert('An error occurred while loading the piece')
     } finally {
       setLoading(false)
     }
@@ -208,11 +208,11 @@ export default function EditBlogPage() {
         router.push('/admin/blogs')
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to update blog')
+        alert(error.error || 'Failed to update piece')
       }
     } catch (error) {
       console.error('Error updating blog:', error)
-      alert('An error occurred while updating the blog')
+      alert('An error occurred while updating the piece')
     } finally {
       setSaving(false)
     }
@@ -244,11 +244,11 @@ export default function EditBlogPage() {
       if (response.ok) {
         router.push('/admin/blogs')
       } else {
-        alert('Failed to delete blog')
+        alert('Failed to delete piece')
       }
     } catch (error) {
       console.error('Error deleting blog:', error)
-      alert('An error occurred while deleting the blog')
+      alert('An error occurred while deleting the piece')
     }
   }
 
@@ -259,7 +259,7 @@ export default function EditBlogPage() {
   if (loading) {
     return (
       <div className="loading-center">
-        <p>Loading blog...</p>
+        <p>Loading piece...</p>
       </div>
     )
   }
@@ -267,7 +267,7 @@ export default function EditBlogPage() {
   if (!blog) {
     return (
       <div className="loading-center">
-        <p>Blog not found</p>
+        <p>Piece not found</p>
       </div>
     )
   }
@@ -275,7 +275,7 @@ export default function EditBlogPage() {
   return (
     <div className="admin-content-wide">
       <div style={{ marginBottom: '1.5rem' }}>
-        <h1 className="admin-page-title">Edit Blog</h1>
+        <h1 className="admin-page-title">Edit Piece</h1>
 
         {/* Info Banner */}
         <div className="info-banner">
@@ -321,7 +321,7 @@ export default function EditBlogPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="form-input"
-              placeholder="Enter blog title..."
+              placeholder="Enter piece title..."
               maxLength={255}
             />
             <p className="form-hint">{title.length}/255 characters</p>
@@ -343,7 +343,7 @@ export default function EditBlogPage() {
               onChange={(e) => setExcerpt(e.target.value)}
               className="form-input"
               rows={3}
-              placeholder="Brief description of the blog post..."
+              placeholder="Brief description of the piece..."
               maxLength={500}
             />
             <p className="form-hint">{excerpt.length}/500 characters</p>
@@ -414,7 +414,7 @@ export default function EditBlogPage() {
                     value={seoTitle}
                     onChange={(e) => setSeoTitle(e.target.value)}
                     className="form-input"
-                    placeholder="Defaults to blog title"
+                    placeholder="Defaults to piece title"
                   />
                 </div>
                 <div>
@@ -480,7 +480,7 @@ export default function EditBlogPage() {
                 disabled={saving}
                 className="btn btn-primary btn-full"
               >
-                {saving ? 'Saving...' : 'Update Blog'}
+                {saving ? 'Saving...' : 'Update Piece'}
               </button>
               {blog.status === 'published' && (
                 <Link
@@ -495,7 +495,7 @@ export default function EditBlogPage() {
                 onClick={handleDelete}
                 className="btn btn-danger btn-full"
               >
-                Delete Blog
+                Delete Piece
               </button>
             </div>
           </div>

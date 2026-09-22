@@ -17,7 +17,7 @@ function SignInContent() {
             Sign in to Admin
           </h2>
           <p className="auth-subtitle">
-            Access the blog management dashboard
+            Access the piece management dashboard
           </p>
         </div>
 

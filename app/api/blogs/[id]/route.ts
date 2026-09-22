@@ -28,7 +28,7 @@ export async function PATCH(
     const blogId = parseInt(id)
 
     if (isNaN(blogId)) {
-      return NextResponse.json({ error: 'Invalid blog ID' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid piece ID' }, { status: 400 })
     }
 
     const body: UpdateBlogRequest = await request.json()
@@ -48,7 +48,7 @@ export async function PATCH(
     `
 
     if (existingBlog.length === 0) {
-      return NextResponse.json({ error: 'Blog not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Piece not found' }, { status: 404 })
     }
 
     const content = body.content || ''
@@ -78,7 +78,7 @@ export async function PATCH(
 
     if (slugCheck.length > 0) {
       return NextResponse.json(
-        { error: 'A blog with this slug already exists' },
+        { error: 'A piece with this slug already exists' },
         { status: 409 }
       )
     }
@@ -126,13 +126,13 @@ export async function PATCH(
     return NextResponse.json({
       success: true,
       blog: rows[0],
-      message: 'Blog updated successfully',
+      message: 'Piece updated successfully',
     })
 
   } catch (error) {
     console.error('Error updating blog:', error)
     return NextResponse.json(
-      { error: 'Failed to update blog post' },
+      { error: 'Failed to update piece' },
       { status: 500 }
     )
   }
@@ -153,7 +153,7 @@ export async function DELETE(
     const blogId = parseInt(id)
 
     if (isNaN(blogId)) {
-      return NextResponse.json({ error: 'Invalid blog ID' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid piece ID' }, { status: 400 })
     }
 
     // Check if blog exists
@@ -162,7 +162,7 @@ export async function DELETE(
     `
 
     if (existingBlog.length === 0) {
-      return NextResponse.json({ error: 'Blog not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Piece not found' }, { status: 404 })
     }
 
     // Release the series index pointer first, so the series is simply left
@@ -178,13 +178,13 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: `Blog "${existingBlog[0].title}" deleted successfully`,
+      message: `Piece "${existingBlog[0].title}" deleted successfully`,
     })
 
   } catch (error) {
     console.error('Error deleting blog:', error)
     return NextResponse.json(
-      { error: 'Failed to delete blog post' },
+      { error: 'Failed to delete piece' },
       { status: 500 }
     )
   }

@@ -215,11 +215,11 @@ export default function CreateBlogPage() {
         router.push('/admin/blogs')
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to create blog')
+        alert(error.error || 'Failed to create piece')
       }
     } catch (error) {
       console.error('Error creating blog:', error)
-      alert('An error occurred while creating the blog')
+      alert('An error occurred while creating the piece')
     } finally {
       setLoading(false)
     }
@@ -247,7 +247,7 @@ export default function CreateBlogPage() {
   return (
     <div className="admin-content-wide">
       <div style={{ marginBottom: '1.5rem' }}>
-        <h1 className="admin-page-title">Create New Blog</h1>
+        <h1 className="admin-page-title">Create New Piece</h1>
       </div>
 
       <div className="grid-sidebar">
@@ -263,7 +263,7 @@ export default function CreateBlogPage() {
               value={title}
               onChange={(e) => handleTitleChange(e.target.value)}
               className="form-input"
-              placeholder="Enter blog title..."
+              placeholder="Enter piece title..."
               maxLength={255}
             />
             <p className="form-hint">{title.length}/255 characters</p>
@@ -285,7 +285,7 @@ export default function CreateBlogPage() {
               onChange={(e) => setExcerpt(e.target.value)}
               className="form-input"
               rows={3}
-              placeholder="Brief description of the blog post..."
+              placeholder="Brief description of the piece..."
               maxLength={500}
             />
             <p className="form-hint">{excerpt.length}/500 characters</p>
@@ -356,7 +356,7 @@ export default function CreateBlogPage() {
                     value={seoTitle}
                     onChange={(e) => setSeoTitle(e.target.value)}
                     className="form-input"
-                    placeholder="Defaults to blog title"
+                    placeholder="Defaults to piece title"
                   />
                 </div>
                 <div>
