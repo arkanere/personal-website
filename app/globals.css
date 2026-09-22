@@ -17,6 +17,7 @@
   --auth-error-bg: #fef2f2;
   --auth-error-border: #fecaca;
   --auth-error-text: #991b1b;
+  --braindump-mark: rgba(37, 99, 235, 0.18);
 }
 
 [data-theme='dark'] {
@@ -35,6 +36,7 @@
   --auth-error-bg: #2d1b1b;
   --auth-error-border: #5c2020;
   --auth-error-text: #fca5a5;
+  --braindump-mark: rgba(96, 165, 250, 0.3);
 }
 
 body {
@@ -544,14 +546,39 @@ img {
   gap: 0.5rem;
 }
 
+.braindump-field {
+  position: relative;
+}
+
+/* The mirror and the textarea have to wrap on the same words, or the marks
+   drift away from the text they belong to. Every metric below is shared. */
+.braindump-highlights,
 .braindump-textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: 0.375rem;
   font-family: Georgia, 'Times New Roman', Times, serif;
   font-size: 1rem;
   line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  scrollbar-gutter: stable;
+}
+
+.braindump-highlights {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: transparent;
+  pointer-events: none;
+}
+
+.braindump-textarea {
+  position: relative;
+  display: block;
+  border-color: var(--border);
+  background: transparent;
   color: var(--text);
   resize: vertical;
 }
@@ -560,6 +587,30 @@ img {
   outline: none;
   border-color: var(--prose-link);
   box-shadow: 0 0 0 1px var(--prose-link);
+}
+
+/* Translucent, so the textarea's own text stays readable on top of it. */
+.braindump-mark {
+  background: var(--braindump-mark);
+  color: transparent;
+  border-radius: 2px;
+}
+
+.braindump-pill {
+  position: absolute;
+  z-index: 2;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border: none;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
 }
 
 /* Writing stages: list of primitives — configs from 20wordsmax/ui.html */

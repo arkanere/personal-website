@@ -92,3 +92,60 @@ export function composeDraft(twms: Twm[]): string {
 
   return paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('\n')
 }
+
+/** Case-insensitive; returns the array untouched when the keyword is blank or already there. */
+export function addDraftKeyword(keywords: string[], raw: string): string[] {
+  const keyword = raw.trim().replace(/\s+/g, ' ')
+  if (keyword === '') return keywords
+  if (keywords.some(k => k.toLowerCase() === keyword.toLowerCase())) return keywords
+  return [...keywords, keyword]
+}
+
+export interface KeywordMatch {
+  start: number
+  end: number
+}
+
+/**
+ * Where every keyword sits in the brain dump. Longer keywords are placed first,
+ * so a phrase is marked once rather than as its separate words, and a match is
+ * dropped when it overlaps one already placed.
+ */
+export function findKeywordMatches(text: string, keywords: string[]): KeywordMatch[] {
+  const matches: KeywordMatch[] = []
+  const taken = new Array<boolean>(text.length).fill(false)
+
+  for (const keyword of [...keywords].sort((a, b) => b.length - a.length)) {
+    if (keyword.trim() === '') continue
+
+    // Whole words only, so "art" does not light up inside "start". A keyword
+    // typed with one space still matches text that wrapped across a newline.
+    const pattern = keyword
+      .trim()
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/\s+/g, '\\s+')
+    const re = new RegExp(`(?<![\\p{L}\\p{N}])${pattern}(?![\\p{L}\\p{N}])`, 'giu')
+
+    let match: RegExpExecArray | null
+    while ((match = re.exec(text)) !== null) {
+      const start = match.index
+      const end = start + match[0].length
+      if (end === start) {
+        re.lastIndex++
+        continue
+      }
+      let free = true
+      for (let i = start; i < end; i++) {
+        if (taken[i]) {
+          free = false
+          break
+        }
+      }
+      if (!free) continue
+      for (let i = start; i < end; i++) taken[i] = true
+      matches.push({ start, end })
+    }
+  }
+
+  return matches.sort((a, b) => a.start - b.start)
+}

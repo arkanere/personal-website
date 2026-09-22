@@ -40,7 +40,7 @@ export default function DraftKeywordsPanel({
   return (
     <div className="stage-panel">
       <div className="primitive-header">
-        <h3 className="primitive-heading">Draft Keywords</h3>
+        <h3 className="primitive-heading">Keywords</h3>
         <button type="button" className="primitive-add" onClick={() => setEditing('new')}>
           +
         </button>

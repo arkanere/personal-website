@@ -360,7 +360,12 @@ export default function EditBlogPage() {
           </div>
 
           {stage === 'braindump' && (
-            <BrainDumpPanel value={braindump} onChange={setBraindump} />
+            <BrainDumpPanel
+              value={braindump}
+              onChange={setBraindump}
+              keywords={draftKeywords}
+              onKeywordsChange={setDraftKeywords}
+            />
           )}
 
           {stage === 'keywords' && (
