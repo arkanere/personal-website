@@ -11,7 +11,7 @@ Next.js (App Router), TypeScript, Postgres, plain CSS.
 | `/blog` | public | Redirects to `/` |
 | `/blog/[slug]` | public | A published article (drafts 404) |
 | `/write` | public | The writing stages, saving nothing |
-| `/admin/blogs` | admin | List, filter by tag, create, edit, delete |
+| `/admin/written-pieces` | admin | List, filter by tag, create, edit, delete |
 | `/auth/signin` | public | Google sign-in |
 | `/api/blogs/*`, `/api/series/*`, `/api/admin/*` | admin | CRUD behind a session + whitelist check |
 

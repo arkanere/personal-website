@@ -242,7 +242,7 @@ export default function AdminBlogsPage() {
       <td className="table-muted">{blog.view_count}</td>
       <td>
         <div className="table-actions">
-          <Link href={`/admin/blogs/${blog.id}/edit`} className="link-blue">
+          <Link href={`/admin/written-pieces/${blog.id}/edit`} className="link-blue">
             Edit
           </Link>
           {blog.status === 'published' && (
@@ -266,7 +266,7 @@ export default function AdminBlogsPage() {
       {/* Header */}
       <div className="flex-between">
         <h1 className="admin-page-title">Piece Management</h1>
-        <Link href="/admin/blogs/create" className="btn btn-primary">
+        <Link href="/admin/written-pieces/create" className="btn btn-primary">
           Create New Piece
         </Link>
       </div>

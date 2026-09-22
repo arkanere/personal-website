@@ -319,7 +319,7 @@ export default function SeriesManager({ onSeriesChanged }: SeriesManagerProps) {
                               </button>
                               {item.index_blog_id && (
                                 <Link
-                                  href={`/admin/blogs/${item.index_blog_id}/edit`}
+                                  href={`/admin/written-pieces/${item.index_blog_id}/edit`}
                                   className="link-green"
                                 >
                                   Edit Index

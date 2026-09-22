@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation'
 
 function SignInContent() {
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') || '/admin/blogs'
+  const callbackUrl = searchParams.get('callbackUrl') || '/admin/written-pieces'
   const error = searchParams.get('error')
 
   return (

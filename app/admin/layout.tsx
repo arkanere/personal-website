@@ -21,8 +21,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Link>
             <nav className="admin-nav">
               <Link
-                href="/admin/blogs"
-                className={`admin-nav-link${isActive('/admin/blogs') ? ' active' : ''}`}
+                href="/admin/written-pieces"
+                className={`admin-nav-link${isActive('/admin/written-pieces') ? ' active' : ''}`}
               >
                 Pieces
               </Link>

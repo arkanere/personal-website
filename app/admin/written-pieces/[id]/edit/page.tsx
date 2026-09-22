@@ -93,7 +93,7 @@ export default function EditBlogPage() {
         })
       } else {
         alert('Failed to load piece')
-        router.push('/admin/blogs')
+        router.push('/admin/written-pieces')
       }
     } catch (error) {
       console.error('Error fetching blog:', error)
@@ -205,7 +205,7 @@ export default function EditBlogPage() {
 
       if (response.ok) {
         savedMaterial.current = JSON.stringify(material)
-        router.push('/admin/blogs')
+        router.push('/admin/written-pieces')
       } else {
         const error = await response.json()
         alert(error.error || 'Failed to update piece')
@@ -242,7 +242,7 @@ export default function EditBlogPage() {
     try {
       const response = await fetch(`/api/blogs/${blogId}`, { method: 'DELETE' })
       if (response.ok) {
-        router.push('/admin/blogs')
+        router.push('/admin/written-pieces')
       } else {
         alert('Failed to delete piece')
       }

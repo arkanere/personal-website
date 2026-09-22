@@ -212,7 +212,7 @@ export default function CreateBlogPage() {
 
       if (response.ok) {
         savedMaterial.current = JSON.stringify(material)
-        router.push('/admin/blogs')
+        router.push('/admin/written-pieces')
       } else {
         const error = await response.json()
         alert(error.error || 'Failed to create piece')
