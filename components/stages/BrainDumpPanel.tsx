@@ -9,6 +9,8 @@ interface BrainDumpPanelProps {
   onChange: (value: string) => void
   keywords: string[]
   onKeywordsChange: (keywords: string[]) => void
+  /** Told when the caret enters and leaves the dump, so /write can dim around it. */
+  onFocusChange?: (focused: boolean) => void
 }
 
 export default function BrainDumpPanel({
@@ -16,6 +18,7 @@ export default function BrainDumpPanel({
   onChange,
   keywords,
   onKeywordsChange,
+  onFocusChange,
 }: BrainDumpPanelProps) {
   const highlightsRef = useRef<HTMLDivElement>(null)
   // The selected text and where to float the pill, or null when nothing is selected.
@@ -56,11 +59,14 @@ export default function BrainDumpPanel({
             }
           }}
           onMouseUp={showPill}
-          onBlur={hidePill}
+          onFocus={() => onFocusChange?.(true)}
+          onBlur={() => {
+            hidePill()
+            onFocusChange?.(false)
+          }}
           className="braindump-textarea"
           rows={18}
           placeholder="Just start writing..."
-          autoFocus
         />
         {pill && (
           <button

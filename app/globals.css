@@ -965,3 +965,22 @@ img {
   border-bottom: 1px solid var(--border);
   margin-bottom: 1.25rem;
 }
+
+/* Click into the brain dump and everything around it recedes; click back out
+   and it returns. Dimmed, not hidden: nothing moves, so the line being written
+   never shifts under the caret, and a tab is still there to be aimed at. */
+.write-page .site-header,
+.write-page .write-title,
+.write-page .write-notice,
+.write-page .write-field,
+.write-page .write-stages {
+  transition: opacity 0.35s;
+}
+
+.write-dimmed .site-header,
+.write-dimmed .write-title,
+.write-dimmed .write-notice,
+.write-dimmed .write-field,
+.write-dimmed .write-stages {
+  opacity: 0.3;
+}

@@ -23,6 +23,8 @@ export default function WritePage() {
   const [draftKeywords, setDraftKeywords] = useState<string[]>([])
   const [twms, setTwms] = useState<Twm[]>([])
   const [content, setContent] = useState('')
+  // True while the caret sits in the brain dump: everything around it recedes.
+  const [writing, setWriting] = useState(false)
 
   const handleCompose = () => {
     if (content.trim() !== '' && !confirm(
@@ -35,8 +37,10 @@ export default function WritePage() {
     setStage('final')
   }
 
+  const dim = writing && stage === 'braindump'
+
   return (
-    <>
+    <div className={'write-page' + (dim ? ' write-dimmed' : '')}>
       <Header />
       <main className="container main">
         <h1 className="write-title">Write</h1>
@@ -71,6 +75,7 @@ export default function WritePage() {
             onChange={setBraindump}
             keywords={draftKeywords}
             onKeywordsChange={setDraftKeywords}
+            onFocusChange={setWriting}
           />
         )}
 
@@ -91,6 +96,6 @@ export default function WritePage() {
           <TipTapEditor content={content} onChange={setContent} />
         )}
       </main>
-    </>
+    </div>
   )
 }
