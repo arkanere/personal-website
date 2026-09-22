@@ -49,24 +49,36 @@ export default async function Home() {
     <>
       <Header />
       <main className="container main">
-        {posts.length === 0 ? (
-          <p className="muted">No essays yet.</p>
-        ) : (
+        <section className="home-section">
+          <h2 className="section-title">Writings</h2>
+          {posts.length === 0 ? (
+            <p className="muted">No essays yet.</p>
+          ) : (
+            <div className="post-list">
+              {posts.map((post) => (
+                <div key={post.id}>
+                  <Link href={`/blog/${post.slug}`}>
+                    {post.title}
+                  </Link>
+                  {post.series_title && (
+                    <span className="series-tag">
+                      series · {post.post_count} {post.post_count === 1 ? 'part' : 'parts'}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="home-section">
+          <h2 className="section-title">Tools</h2>
           <div className="post-list">
-            {posts.map((post) => (
-              <div key={post.id}>
-                <Link href={`/blog/${post.slug}`}>
-                  {post.title}
-                </Link>
-                {post.series_title && (
-                  <span className="series-tag">
-                    series · {post.post_count} {post.post_count === 1 ? 'part' : 'parts'}
-                  </span>
-                )}
-              </div>
-            ))}
+            <div>
+              <Link href="/write">Write</Link>
+            </div>
           </div>
-        )}
+        </section>
       </main>
     </>
   )
