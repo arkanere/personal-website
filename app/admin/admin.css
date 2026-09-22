@@ -1044,3 +1044,56 @@
 }
 
 .twm-btn-secondary:hover { background: #ddd; }
+
+/* Tags */
+.tag-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.tag-match {
+  width: auto;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 9999px;
+  background-color: white;
+  font-size: 0.75rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.tag-pill:hover {
+  background-color: #f9fafb;
+}
+
+.tag-pill-active {
+  background-color: #1e40af;
+  border-color: #1e40af;
+  color: white;
+}
+
+.tag-pill-active:hover {
+  background-color: #1e3a8a;
+}
+
+.tag-count {
+  color: #6b7280;
+}
+
+.tag-pill-active .tag-count {
+  color: #bfdbfe;
+}

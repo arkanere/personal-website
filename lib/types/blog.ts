@@ -104,6 +104,7 @@ export interface BlogListItem {
   created_at: Date
   updated_at: Date
   view_count: number
+  tags: string[]
   series_id: number | null
   series_order: number | null
   series_title: string | null

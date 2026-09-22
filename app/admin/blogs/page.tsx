@@ -22,6 +22,8 @@ export default function AdminBlogsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<BlogStatus | 'all'>('all')
   const [seriesFilter, setSeriesFilter] = useState<string>('all')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [tagMatch, setTagMatch] = useState<'and' | 'or'>('and')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'most-viewed'>('newest')
   const [groupBySeries, setGroupBySeries] = useState(true)
 
@@ -70,6 +72,16 @@ export default function AdminBlogsPage() {
       result = result.filter(blog => blog.series_id === parseInt(seriesFilter))
     }
 
+    // Filter by tags
+    if (selectedTags.length > 0) {
+      result = result.filter(blog => {
+        const tags = blog.tags || []
+        return tagMatch === 'and'
+          ? selectedTags.every(tag => tags.includes(tag))
+          : selectedTags.some(tag => tags.includes(tag))
+      })
+    }
+
     // Sort: published articles come first, then drafts, then archived.
     // The chosen sort order applies within each status band.
     const statusRank = (status: string) =>
@@ -89,7 +101,7 @@ export default function AdminBlogsPage() {
     })
 
     setFilteredBlogs(result)
-  }, [blogs, searchQuery, statusFilter, seriesFilter, sortBy])
+  }, [blogs, searchQuery, statusFilter, seriesFilter, selectedTags, tagMatch, sortBy])
 
   const handleDelete = async (id: number, title: string) => {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) {
@@ -117,6 +129,26 @@ export default function AdminBlogsPage() {
         .map(blog => [blog.series_id as number, blog.series_title as string])
     ).entries()
   ).sort((a, b) => a[1].localeCompare(b[1]))
+
+  // Every tag in use, with how many blogs carry it. Counts are over all
+  // blogs, so they stay steady as tags are selected.
+  const tagCounts = new Map<string, number>()
+  for (const blog of blogs) {
+    for (const tag of blog.tags || []) {
+      tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1)
+    }
+  }
+  const knownTags = Array.from(tagCounts.entries()).sort((a, b) =>
+    a[0].localeCompare(b[0])
+  )
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags(current =>
+      current.includes(tag)
+        ? current.filter(t => t !== tag)
+        : [...current, tag]
+    )
+  }
 
   /**
    * Series members read as a hierarchy: one group per series in reading order,
@@ -326,13 +358,50 @@ export default function AdminBlogsPage() {
         </label>
       </div>
 
+      {/* Tags */}
+      {knownTags.length > 0 && (
+        <div className="card-sm stack-sm">
+          <div className="tag-header">
+            <label className="form-label">Tags</label>
+            <select
+              value={tagMatch}
+              onChange={(e) => setTagMatch(e.target.value as 'and' | 'or')}
+              className="form-input tag-match"
+            >
+              <option value="and">Match all (AND)</option>
+              <option value="or">Match any (OR)</option>
+            </select>
+          </div>
+          <div className="tag-list">
+            <button
+              type="button"
+              onClick={() => setSelectedTags([])}
+              className={`tag-pill${selectedTags.length === 0 ? ' tag-pill-active' : ''}`}
+            >
+              All
+            </button>
+            {knownTags.map(([tag, count]) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => toggleTag(tag)}
+                className={`tag-pill${selectedTags.includes(tag) ? ' tag-pill-active' : ''}`}
+              >
+                {tag}
+                <span className="tag-count">{count}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Blog List */}
       <div className="table-card">
         {loading ? (
           <div className="empty-state">Loading blogs...</div>
         ) : filteredBlogs.length === 0 ? (
           <div className="empty-state">
-            {searchQuery || statusFilter !== 'all' || seriesFilter !== 'all'
+            {searchQuery || statusFilter !== 'all' || seriesFilter !== 'all' || selectedTags.length > 0
               ? 'No blogs match your filters'
               : 'No blogs yet. Create your first blog!'}
           </div>
