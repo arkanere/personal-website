@@ -4,10 +4,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions, isAdminEmail } from '@/lib/auth'
 import { sql } from '@vercel/postgres'
 
 export async function GET(request: NextRequest) {
   try {
+    // This asks about every row, drafts included, so it answers only to an
+    // admin. Otherwise it tells the world which unpublished slugs exist.
+    const session = await getServerSession(authOptions)
+    if (!session || !isAdminEmail(session.user?.email)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const searchParams = request.nextUrl.searchParams
     const slug = searchParams.get('slug')
     const excludeId = searchParams.get('excludeId')

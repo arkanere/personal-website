@@ -6,6 +6,23 @@ import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import GitHubProvider from 'next-auth/providers/github'
 
+/** The admin whitelist, from ADMIN_EMAILS. An unset list admits nobody. */
+export function isAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false
+
+  const allowed = (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean)
+
+  if (allowed.length === 0) {
+    console.warn('⚠️  No ADMIN_EMAILS configured, so no one can sign in.')
+    return false
+  }
+
+  return allowed.includes(email.toLowerCase())
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -23,16 +40,8 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/error',
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
-      // Email whitelist for admin access
-      const allowedEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || []
-
-      if (allowedEmails.length === 0) {
-        console.warn('⚠️  No ADMIN_EMAILS configured. All authenticated users can access admin.')
-        return true
-      }
-
-      if (!allowedEmails.includes(user.email || '')) {
+    async signIn({ user }) {
+      if (!isAdminEmail(user.email)) {
         console.log(`❌ Access denied for ${user.email}`)
         return false
       }

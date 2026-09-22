@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions, isAdminEmail } from '@/lib/auth'
 import { sql } from '@vercel/postgres'
 import { SeriesFormData } from '@/lib/types/blog'
 
@@ -16,7 +16,7 @@ export async function PATCH(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session) {
+    if (!session || !isAdminEmail(session.user?.email)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -107,7 +107,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session) {
+    if (!session || !isAdminEmail(session.user?.email)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

@@ -5,8 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions, isAdminEmail } from '@/lib/auth'
 import { sql } from '@vercel/postgres'
+import { toPgTextArray } from '@/lib/pg'
 import { CreateBlogRequest } from '@/lib/types/blog'
 import { parseSeriesId, parseSeriesOrder, seriesExists, syncSeriesIndex } from '@/lib/series'
 import { canPublish, normalizeDraftKeywords, normalizeTwms, validateTwm } from '@/lib/lifecycle'
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
   try {
     // Check authentication
     const session = await getServerSession(authOptions)
-    if (!session) {
+    if (!session || !isAdminEmail(session.user?.email)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -66,8 +67,8 @@ export async function POST(request: NextRequest) {
     // Convert arrays to PostgreSQL array format: '{value1,value2}'
     const tags = body.tags || []
     const categories = body.categories || []
-    const tagsArray = `{${tags.join(',')}}`
-    const categoriesArray = `{${categories.join(',')}}`
+    const tagsArray = toPgTextArray(tags)
+    const categoriesArray = toPgTextArray(categories)
 
     // A blog with no series_id is an ordinary standalone article.
     const seriesId = parseSeriesId(body.series_id)
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
         ${seriesId},
         ${seriesOrder},
         ${braindump},
-        ${`{${draftKeywords.join(',')}}`}::text[],
+        ${toPgTextArray(draftKeywords)}::text[],
         ${JSON.stringify(twms)}::jsonb,
         ${JSON.stringify(body.seo_metadata)}::jsonb,
         ${body.published_at ? new Date(body.published_at).toISOString() : null}

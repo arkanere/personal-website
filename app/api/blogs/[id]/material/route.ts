@@ -8,8 +8,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions, isAdminEmail } from '@/lib/auth'
 import { sql } from '@vercel/postgres'
+import { toPgTextArray } from '@/lib/pg'
 import { Twm } from '@/lib/types/blog'
 import { canPublish, normalizeDraftKeywords, normalizeTwms, validateTwm } from '@/lib/lifecycle'
 
@@ -26,7 +27,7 @@ export async function PATCH(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session) {
+    if (!session || !isAdminEmail(session.user?.email)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -70,7 +71,7 @@ export async function PATCH(
     const { rows } = await sql`
       UPDATE personal_website_blogs SET
         braindump = ${braindump},
-        draft_keywords = ${`{${draftKeywords.join(',')}}`}::text[],
+        draft_keywords = ${toPgTextArray(draftKeywords)}::text[],
         twms = ${JSON.stringify(twms)}::jsonb,
         content = CASE WHEN ${keepContent} THEN content ELSE ${content} END
       WHERE id = ${blogId}

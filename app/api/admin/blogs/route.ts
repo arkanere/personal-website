@@ -5,14 +5,14 @@
 
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions, isAdminEmail } from '@/lib/auth'
 import { sql } from '@vercel/postgres'
 
 export async function GET() {
   try {
     // Check authentication
     const session = await getServerSession(authOptions)
-    if (!session) {
+    if (!session || !isAdminEmail(session.user?.email)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
