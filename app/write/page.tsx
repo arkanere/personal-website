@@ -18,6 +18,7 @@ import { Twm } from '@/lib/types/blog'
 
 export default function WritePage() {
   const [stage, setStage] = useState<WritingStage>('braindump')
+  const [title, setTitle] = useState('')
   const [braindump, setBraindump] = useState('')
   const [draftKeywords, setDraftKeywords] = useState<string[]>([])
   const [twms, setTwms] = useState<Twm[]>([])
@@ -39,15 +40,26 @@ export default function WritePage() {
       <Header />
       <main className="container main">
         <h1 className="write-title">Write</h1>
-        <p className="write-intro">
-          Four stages: dump everything, pull out the keywords, say each idea in
-          twenty words, then format it.
-        </p>
         <p className="write-notice">
           Nothing here is saved. This page stores no writing, on your machine or
           on this site, and closing or reloading the tab loses it. Copy anything
           you want to keep before you leave.
         </p>
+
+        <div className="write-field">
+          <label className="write-label" htmlFor="write-title">
+            Title
+          </label>
+          <input
+            id="write-title"
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="write-input"
+            placeholder="Untitled"
+            maxLength={255}
+          />
+        </div>
 
         <div className="write-stages">
           <StageTabs stage={stage} onChange={setStage} />
